@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">App Name</string>
+    <string name="app_name">CRS</string>
 
     <string name="scan">Scan</string>
     <string name="home"> Home</string>

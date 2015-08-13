@@ -25,7 +25,7 @@ public class DroidSignerApplication extends Application {
         Iconify.with(new FontAwesomeModule());
 
         restAdapter = new RestAdapter.Builder()
-                .setEndpoint("http://192.168.2.106:8080")
+                .setEndpoint("http://crs.meruvian.org")
                 .build();
     }
 

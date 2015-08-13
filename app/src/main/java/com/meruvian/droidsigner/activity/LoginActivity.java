@@ -91,15 +91,11 @@ public class LoginActivity extends AppCompatActivity  {
                 finish();
                 Log.i("Response", response.toString());
 
-            }catch (Exception e){
-                
-                e.printStackTrace();
+            } catch (Exception e){
+                Log.e(getClass().getSimpleName(), e.getMessage(), e);
             }
-
-
             return null;
         }
-
         @Override
         protected void onPostExecute(String s) {
             progressDialog.dismiss();
