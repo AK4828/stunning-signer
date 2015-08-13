@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">App Name</string>
+
+    <string name="scan">Scan</string>
+    <string name="home"> Home</string>
+    <string name="setting">Pengaturan</string>
+    <string name="bantuan">Bantuan</string>
+    <string-array name="nav_drawer_items">
+        <item>@string/home</item>
+        <item>@string/setting</item>
+        <item>@string/bantuan</item>
+    </string-array>
+    <array name="nav_drawer_icons">
+        <item>@drawable/ic_home</item>
+        <item>@drawable/ic_settings</item>
+        <item>@drawable/ic_help</item>
+    </array>
+    <string name="desc_list_item_icon">List Icon</string>
+    <string name="drawer_open">Open</string>
+    <string name="drawer_close">Close</string>
+    <string name="server_url">http://192.168.2.106:8080/</string>
+</resources>
