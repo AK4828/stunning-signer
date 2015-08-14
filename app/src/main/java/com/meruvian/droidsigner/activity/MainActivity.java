@@ -11,6 +11,9 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.TextView;
 
 import com.joanzapata.iconify.Iconify;
 import com.joanzapata.iconify.fonts.FontAwesomeModule;
@@ -24,6 +27,7 @@ import com.meruvian.droidsigner.fragment.FragmentScanner;
 public class MainActivity extends AppCompatActivity implements FragmentDrawer.FragmentDrawerListener {
     private Toolbar mToolbar;
     private FragmentDrawer drawerFragment;
+
 
     public void replaceFragment(Fragment fragment, String tag) {
         FragmentManager fragmentManager = getFragmentManager();

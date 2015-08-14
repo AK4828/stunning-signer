@@ -1,8 +1,9 @@
 package com.meruvian.droidsigner.service;
 
+import com.meruvian.droidsigner.entity.Authentication;
+
 import java.util.Map;
 
-import retrofit.http.GET;
 import retrofit.http.Header;
 import retrofit.http.POST;
 import retrofit.http.QueryMap;
@@ -12,5 +13,5 @@ import retrofit.http.QueryMap;
  */
 public interface LoginService {
     @POST("/oauth/token")
-    Map<String, String> login(@Header("Authorization") String authorization,@QueryMap Map<String, String> queryParam);
+    Authentication login(@Header("Authorization") String authorization,@QueryMap Map<String, String> queryParam);
 }

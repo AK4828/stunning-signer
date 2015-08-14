@@ -1,12 +1,10 @@
 package com.meruvian.droidsigner.activity;
 
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Base64;
 import android.util.Log;
@@ -16,16 +14,20 @@ import android.widget.EditText;
 import android.widget.Toast;
 
 import com.meruvian.droidsigner.DroidSignerApplication;
+import com.meruvian.droidsigner.entity.Authentication;
 import com.meruvian.droidsigner.R;
+import com.meruvian.droidsigner.job.LoginJob;
 import com.meruvian.droidsigner.service.LoginService;
+import com.meruvian.droidsigner.utils.AuthenticationUtils;
+import com.path.android.jobqueue.JobManager;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import de.greenrobot.event.EventBus;
 import retrofit.RestAdapter;
 
 /**
@@ -38,71 +40,44 @@ public class LoginActivity extends AppCompatActivity  {
 
     private ProgressDialog progressDialog;
 
-    private RestAdapter restAdapter;
+    private JobManager jobManager;
 
     @Override
     public void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.login_activity);
         ButterKnife.bind(this);
-        restAdapter = DroidSignerApplication.getInstance().getRestAdapter();
+        DroidSignerApplication application = DroidSignerApplication.getInstance();
+        EventBus.getDefault().register(this);
+        if (AuthenticationUtils.getCurrentAuthentication()!=null){
+            Intent intent = new Intent(LoginActivity.this,MainActivity.class);
+            startActivity(intent);
+            finish();
+        }
+        jobManager = application.getJobManager();
     }
 
     @OnClick(R.id.btn_login) void onClick(View v) {
         switch (v.getId()){
             case R.id.btn_login:
-                new Login().execute();
+                jobManager.addJobInBackground(new LoginJob(inputEmail.getText().toString(), inputPassword.getText().toString()));
             default:
                 break;
         }
     }
-    class Login extends AsyncTask<String,String,String>{
-        boolean failure = false;
-        @Override
-        protected void onPreExecute(){
-            super.onPreExecute();
-            progressDialog = new ProgressDialog(LoginActivity.this);
-            progressDialog.setMessage("Tunggu Sebentar...");
-            progressDialog.setIndeterminate(false);
-            progressDialog.setCancelable(true);
-            progressDialog.show();
+
+    public void onEventMainThread(LoginJob.LoginEvent event) {
+        int status = event.getStatus();
+        Authentication authentication = event.getAuthentication();
+
+
+        if (status == LoginJob.LoginEvent.LOGIN_FAILED) {
+            Toast.makeText(this, "On process", Toast.LENGTH_LONG).show();
         }
-
-        @Override
-        protected String doInBackground(String... params) {
-            LoginService loginService = restAdapter.create(LoginService.class);
-            String username = inputEmail.getText().toString();
-            String password = inputPassword.getText().toString();
-            try {
-                Map<String, String> param = new HashMap<>();
-                param.put("grant_type", "password");
-                param.put("username", username);
-                param.put("password", password);
-                param.put("client_id", "419c6697-14b7-4853-880e-b68e3731e316");
-                param.put("client_secret", "s3cr3t");
-
-                // Authorization header: Basic base64(clientId:clientSecret)
-                String authorization = new String(Base64.encode("419c6697-14b7-4853-880e-b68e3731e316:s3cr3t".getBytes(), Base64.DEFAULT));
-
-                Map<String, String> response = loginService.login("Basic " + authorization, param);
-                Intent ii = new Intent(LoginActivity.this, MainActivity.class);
-                startActivity(ii);
-
-                finish();
-                Log.i("Response", response.toString());
-
-            } catch (Exception e){
-                Log.e(getClass().getSimpleName(), e.getMessage(), e);
-            }
-            return null;
-        }
-        @Override
-        protected void onPostExecute(String s) {
-            progressDialog.dismiss();
-            if (s != null) {
-                Toast.makeText(LoginActivity.this, s, Toast.LENGTH_LONG).show();
-            }
+        if (status == LoginJob.LoginEvent.LOGIN_SUCCESS){
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+            startActivity(intent);
+            finish();
         }
     }
-
 }

@@ -7,5 +7,10 @@
         android:icon="@drawable/ic_action_view_qr_code"
         app:showAsAction="collapseActionView|always"
         />-->
+    <item
+        android:id="@+id/action_logout"
+        android:title="@string/action_logout"
+        app:showAsAction="never">
+    </item>
 
 </menu>
