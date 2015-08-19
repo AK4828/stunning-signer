@@ -51,8 +51,6 @@ public class FragmentScanner extends Fragment implements ZXingScannerView.Result
 
     @Override
     public void handleResult(Result rawResult){
-        RestAdapter restAdapter = DroidSignerApplication.getInstance().getRestAdapter();
-        DocumentService documentService = restAdapter.create(DocumentService.class);
         Bundle bundle = new Bundle();
         bundle.putString("qrcode", rawResult.getText());
 

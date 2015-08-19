@@ -19,7 +19,7 @@ public interface DocumentService {
     Document saveDocumentFile(@QueryMap Map<String, String> documents, InputStream stream) throws Exception;
 
     @PUT("/api/documents/{id}")
-    Document updateDocument(@QueryMap Map<String, String> docId,Document document);
+    Document updateDocument(@Path("id") String docId,Document document);
 
     @GET("/api/documents/{id}")
     Document getDocumentById(@Path("id")String id);

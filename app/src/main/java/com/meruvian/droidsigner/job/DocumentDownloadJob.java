@@ -1,11 +1,17 @@
 package com.meruvian.droidsigner.job;
 
+import android.util.Log;
+
 import com.meruvian.droidsigner.DroidSignerApplication;
+import com.meruvian.droidsigner.content.adapter.DocumentAdapter;
+import com.meruvian.droidsigner.content.adapter.DocumentDownloadedDatabaseAdapter;
+import com.meruvian.droidsigner.content.database.DocumentDownloadedDatabase;
 import com.meruvian.droidsigner.entity.Document;
 import com.meruvian.droidsigner.service.DocumentService;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.Params;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,6 +24,10 @@ import retrofit.RestAdapter;
 public class DocumentDownloadJob extends Job {
     private String id;
     private Document document;
+    private DocumentAdapter documentAdapter;
+    private DocumentDownloadedDatabaseAdapter documentDownloadedDatabaseAdapter;
+
+
 
 
     public DocumentDownloadJob(String id) {
@@ -36,7 +46,12 @@ public class DocumentDownloadJob extends Job {
         DocumentService documentService = restAdapter.create(DocumentService.class);
         document = documentService.getDocumentById(id);
 
+        Log.d("document values", document.toString());
+
         EventBus.getDefault().post(new DocumentDownloadEvent(document));
+
+
+
     }
 
     @Override

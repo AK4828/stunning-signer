@@ -1,7 +1,9 @@
 package com.meruvian.droidsigner.job;
 
+import android.app.ProgressDialog;
 import android.util.Base64;
 import android.util.Log;
+import android.widget.ProgressBar;
 
 import com.meruvian.droidsigner.DroidSignerApplication;
 import com.meruvian.droidsigner.activity.LoginActivity;
@@ -35,7 +37,9 @@ public class LoginJob extends Job {
 
     @Override
     public void onAdded() {
+
         EventBus.getDefault().post(new LoginEvent(LoginEvent.LOGIN_STARTED, null));
+
     }
 
     @Override
@@ -75,6 +79,7 @@ public class LoginJob extends Job {
         EventBus.getDefault().post(new LoginEvent(LoginEvent.LOGIN_ERROR, null));
     }
 
+
     @Override
     protected boolean shouldReRunOnThrowable(Throwable throwable) {
         Log.e("Auth", throwable.getMessage(), throwable);
@@ -104,4 +109,5 @@ public class LoginJob extends Job {
             return status;
         }
     }
+
 }

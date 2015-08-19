@@ -23,6 +23,10 @@
             android:name=".activity.MainActivity"
             android:configChanges="orientation|screenSize"
             />
+        <provider
+            android:name="com.meruvian.droidsigner.content.DocumentDownloadedContentProvider"
+            android:authorities="com.meruvian.droidsigner.content.documentdownloadedcontentprovider"
+            android:syncable="true"/>
     </application>
 
 </manifest>

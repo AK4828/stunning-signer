@@ -5,7 +5,7 @@ import java.io.InputStream;
 /**
  * Created by root on 8/14/15.
  */
-public class FileInfo {
+public class FileInfo extends DefaultPersistence {
     private String originalName;
     private String contentType;
     private String path;

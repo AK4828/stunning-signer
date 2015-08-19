@@ -37,8 +37,7 @@ public class LoginActivity extends AppCompatActivity  {
     @Bind(R.id.input_email) EditText inputEmail;
     @Bind(R.id.input_password) EditText inputPassword;
     @Bind(R.id.btn_login) Button btnLogin;
-
-    private ProgressDialog progressDialog;
+    @Bind(R.id.progress) View progressBar;
 
     private JobManager jobManager;
 
@@ -55,6 +54,7 @@ public class LoginActivity extends AppCompatActivity  {
             finish();
         }
         jobManager = application.getJobManager();
+
     }
 
     @OnClick(R.id.btn_login) void onClick(View v) {
@@ -67,17 +67,27 @@ public class LoginActivity extends AppCompatActivity  {
     }
 
     public void onEventMainThread(LoginJob.LoginEvent event) {
+
         int status = event.getStatus();
         Authentication authentication = event.getAuthentication();
 
-
-        if (status == LoginJob.LoginEvent.LOGIN_FAILED) {
-            Toast.makeText(this, "On process", Toast.LENGTH_LONG).show();
+        if (status == LoginJob.LoginEvent.LOGIN_ERROR) {
+            progressBar.setVisibility(View.GONE);
+            btnLogin.setVisibility(View.VISIBLE);
+            inputEmail.setEnabled(true);
+            inputPassword.setEnabled(true);
         }
         if (status == LoginJob.LoginEvent.LOGIN_SUCCESS){
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
+
+        }
+        if (status == LoginJob.LoginEvent.LOGIN_STARTED){
+            progressBar.setVisibility(View.VISIBLE);
+            btnLogin.setVisibility(View.GONE);
+            inputEmail.setEnabled(false);
+            inputPassword.setEnabled(false);
         }
     }
 }
