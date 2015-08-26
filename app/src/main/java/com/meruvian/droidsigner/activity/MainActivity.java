@@ -7,7 +7,6 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -17,17 +16,14 @@ import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 
 import com.meruvian.droidsigner.R;
 import com.meruvian.droidsigner.content.adapter.DocumentAdapter;
 import com.meruvian.droidsigner.content.adapter.DocumentDownloadedDatabaseAdapter;
-import com.meruvian.droidsigner.fragment.FragmentScanner;
+import com.meruvian.droidsigner.fragment.FragmentUtils;
+import com.meruvian.droidsigner.fragment.ListSignedDocumentFragment;
 import com.meruvian.droidsigner.utils.AuthenticationUtils;
 
-import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
@@ -39,14 +35,6 @@ public class MainActivity extends AppCompatActivity  {
     private NavigationView navigationView;
     private DocumentAdapter documentAdapter;
     private DocumentDownloadedDatabaseAdapter documentDownloadedDatabaseAdapter;
-    @Bind(R.id.documentList) ListView documentList;
-
-    public void replaceFragment(Fragment fragment, String tag) {
-        FragmentManager fragmentManager = getFragmentManager();
-        FragmentTransaction transaction = fragmentManager.beginTransaction();
-
-        transaction.replace(R.id.content, fragment, tag).addToBackStack(null).commit();
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -61,23 +49,18 @@ public class MainActivity extends AppCompatActivity  {
         actionBar.setHomeAsUpIndicator(R.drawable.ic_menu_white_24dp);
 
         setupNavigationDrawer();
-        FloatingActionButton FAB;
-        FAB = (FloatingActionButton)findViewById(R.id.fab);
-        FAB.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                replaceFragment(new FragmentScanner(), "scanner");
-            }
-        });
+
+        FragmentUtils.replaceFragment(getFragmentManager(), ListSignedDocumentFragment.newInstance(), null);
 
         documentDownloadedDatabaseAdapter = new DocumentDownloadedDatabaseAdapter(this);
         documentAdapter = new DocumentAdapter(this, documentDownloadedDatabaseAdapter.findAllDownloadedDocument());
-        documentList.setAdapter(documentAdapter);
+//        documentList.setAdapter(documentAdapter);
 
 //        TelephonyManager telephonyManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 //        String tel = telephonyManager.getDeviceId();
 //        Log.d("IMEI",tel);
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         getMenuInflater().inflate(R.menu.actions, menu);
@@ -120,6 +103,7 @@ public class MainActivity extends AppCompatActivity  {
         }
         return true;
     }
+
     public void setupNavigationDrawer(){
         drawerLayout = (DrawerLayout)findViewById(R.id.drawer_layout);
         
@@ -146,9 +130,10 @@ public class MainActivity extends AppCompatActivity  {
 
         drawerLayout.closeDrawers();
     }
+
     @Override
     public void onBackPressed() {
-        if (getFragmentManager().getBackStackEntryCount() <= 0) {
+        if (getFragmentManager().getBackStackEntryCount() <= 1) {
             super.onBackPressed();
         } else {
             getFragmentManager().popBackStack();

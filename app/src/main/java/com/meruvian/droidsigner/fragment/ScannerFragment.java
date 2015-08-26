@@ -26,9 +26,12 @@ import retrofit.RestAdapter;
 /**
  * Created by root on 8/12/15.
  */
-public class FragmentScanner extends Fragment implements ZXingScannerView.ResultHandler {
+public class ScannerFragment extends Fragment implements ZXingScannerView.ResultHandler {
     private ZXingScannerView mScannerView;
 
+    public static ScannerFragment newInstance() {
+        return new ScannerFragment();
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){

@@ -69,18 +69,18 @@ public class DocumentAdapter extends BaseAdapter {
             holder = new ViewHolder();
             convertView = inflater.inflate(R.layout.main_activity, parent, false);
 
-            holder.subject = (TextView) convertView.findViewById(R.id.view_subject);
-            holder.description = (TextView) convertView.findViewById(R.id.view_description);
-            holder.date = (TextView) convertView.findViewById(R.id.view_date);
+//            holder.subject = (TextView) convertView.findViewById(R.id.view_subject);
+//            holder.description = (TextView) convertView.findViewById(R.id.view_description);
+//            holder.date = (TextView) convertView.findViewById(R.id.view_date);
 
             convertView.setTag(holder);
         } else {
             holder = (ViewHolder) convertView.getTag();
         }
 
-        holder.subject.setText(documents.get(position).getSubject());
-        holder.description.setText(documents.get(position).getDescription());
-        holder.date.setText(dateFormat.format(new Date(documents.get(position).getCreateDate())));
+//        holder.subject.setText(documents.get(position).getSubject());
+//        holder.description.setText(documents.get(position).getDescription());
+//        holder.date.setText(dateFormat.format(new Date(documents.get(position).getCreateDate())));
 
         return convertView;
     }
