@@ -47,29 +47,30 @@ public class LoginActivity extends AppCompatActivity  {
         setContentView(R.layout.login_activity);
         ButterKnife.bind(this);
         DroidSignerApplication application = DroidSignerApplication.getInstance();
+        jobManager = application.getJobManager();
         EventBus.getDefault().register(this);
-        if (AuthenticationUtils.getCurrentAuthentication()!=null){
-            Intent intent = new Intent(LoginActivity.this,MainActivity.class);
+
+        if (AuthenticationUtils.getCurrentAuthentication() != null) {
+            Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
-        }
-        jobManager = application.getJobManager();
 
+            // TODO: Refresh token
+            // jobManager.addJobInBackground(LoginJob.refresh());
+        }
     }
 
     @OnClick(R.id.btn_login) void onClick(View v) {
         switch (v.getId()){
             case R.id.btn_login:
-                jobManager.addJobInBackground(new LoginJob(inputEmail.getText().toString(), inputPassword.getText().toString()));
+                jobManager.addJobInBackground(LoginJob.login(inputEmail.getText().toString(), inputPassword.getText().toString()));
             default:
                 break;
         }
     }
 
     public void onEventMainThread(LoginJob.LoginEvent event) {
-
         int status = event.getStatus();
-        Authentication authentication = event.getAuthentication();
 
         if (status == LoginJob.LoginEvent.LOGIN_ERROR) {
             progressBar.setVisibility(View.GONE);
@@ -77,12 +78,13 @@ public class LoginActivity extends AppCompatActivity  {
             inputEmail.setEnabled(true);
             inputPassword.setEnabled(true);
         }
+
         if (status == LoginJob.LoginEvent.LOGIN_SUCCESS){
             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
             startActivity(intent);
             finish();
-
         }
+
         if (status == LoginJob.LoginEvent.LOGIN_STARTED){
             progressBar.setVisibility(View.VISIBLE);
             btnLogin.setVisibility(View.GONE);

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meruvian.droidsigner.DroidSignerApplication;
 import com.meruvian.droidsigner.entity.Authentication;
+import com.meruvian.droidsigner.entity.KeyStore;
 
 import java.io.IOException;
 
@@ -16,27 +17,46 @@ import java.io.IOException;
  */
 public class AuthenticationUtils {
     private static final String AUTHENTICATION = "AUTHENTICATION";
+    private static final String KEY_STORE = "KEY_STORE";
 
     public static void registerAuthentication(Authentication authentication) {
-        ObjectMapper mapper = DroidSignerApplication.getInstance().getObjectMapper();
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(DroidSignerApplication.getInstance());
-        SharedPreferences.Editor editor = preferences.edit();
-        try {
-            editor.putString(AUTHENTICATION, mapper.writeValueAsString(authentication));
-        } catch (JsonProcessingException e) {
-            Log.e(AuthenticationUtils.class.getSimpleName(), e.getMessage(), e);
-        }
-        editor.apply();
+       registerPreference(AUTHENTICATION, authentication);
     }
 
     public static Authentication getCurrentAuthentication(){
+        return getObjectFromPreference(AUTHENTICATION, Authentication.class);
+    }
+
+    public static void registerKeyStore(KeyStore keyStore) {
+        registerPreference(KEY_STORE, keyStore);
+    }
+
+    public static KeyStore getKeyStore() {
+        return getObjectFromPreference(KEY_STORE, KeyStore.class);
+    }
+
+    private static void registerPreference(String key, Object o) {
         ObjectMapper mapper = DroidSignerApplication.getInstance().getObjectMapper();
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(DroidSignerApplication.getInstance());
-        String jsonAuth = preferences.getString(AUTHENTICATION, "");
+        SharedPreferences.Editor editor = preferences.edit();
+
+        try {
+            editor.putString(key, mapper.writeValueAsString(o));
+        } catch (JsonProcessingException e) {
+            Log.e(AuthenticationUtils.class.getSimpleName(), e.getMessage(), e);
+        }
+
+        editor.apply();
+    }
+
+    private static <T> T getObjectFromPreference(String key, Class<T> clazz) {
+        ObjectMapper mapper = DroidSignerApplication.getInstance().getObjectMapper();
+        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(DroidSignerApplication.getInstance());
+        String jsonAuth = preferences.getString(key, "");
 
         if (!jsonAuth.equals("")) {
             try {
-                return mapper.readValue(jsonAuth, Authentication.class);
+                return mapper.readValue(jsonAuth, clazz);
             } catch (IOException e) {
                 Log.e(AuthenticationUtils.class.getSimpleName(), e.getMessage(), e);
             }

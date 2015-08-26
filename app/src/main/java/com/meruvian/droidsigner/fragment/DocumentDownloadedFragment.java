@@ -1,10 +1,9 @@
 package com.meruvian.droidsigner.fragment;
 
-import android.app.Activity;
 import android.app.Fragment;
 import android.os.Bundle;
-import android.support.annotation.Nullable;
-import android.util.Log;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -13,6 +12,7 @@ import android.widget.TextView;
 import com.meruvian.droidsigner.DroidSignerApplication;
 import com.meruvian.droidsigner.R;
 import com.meruvian.droidsigner.content.adapter.DocumentAdapter;
+import com.meruvian.droidsigner.content.adapter.DocumentDetailsAdapter;
 import com.meruvian.droidsigner.content.adapter.DocumentDownloadedDatabaseAdapter;
 import com.meruvian.droidsigner.entity.Document;
 import com.meruvian.droidsigner.job.DocumentDownloadJob;
@@ -28,32 +28,38 @@ import de.greenrobot.event.EventBus;
 /**
  * Created by root on 8/14/15.
  */
-public class FragmentDocumentDownloaded extends Fragment {
-    @Bind(R.id.text_subject)
-    TextView txtSubject;
-    @Bind(R.id.text_description)
-    TextView txtDescription;
-    @Bind(R.id.text_content_type)
-    TextView txtContentType;
-
+public class DocumentDownloadedFragment extends Fragment {
+    @Bind(R.id.doc_subject) TextView docSubject;
+    @Bind(R.id.doc_description) TextView docDescription;
+    @Bind(R.id.doc_props) RecyclerView docProps;
 
     private DocumentAdapter documentAdapter;
     private DocumentDownloadedDatabaseAdapter documentDownloadedDatabaseAdapter;
+    private DocumentDetailsAdapter docAdapter;
 
+    public static DocumentDownloadedFragment newInstance(String id) {
+        DocumentDownloadedFragment instance = new DocumentDownloadedFragment();
+        instance.setArguments(new Bundle());
+        instance.getArguments().putString("id", id);
 
+        return instance;
+    }
 
-    @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_document_download, container, false);
         ButterKnife.bind(this, view);
 
+        docProps.setHasFixedSize(true);
+        docProps.setLayoutManager(new LinearLayoutManager(getActivity()));
+        docProps.setAdapter(docAdapter = new DocumentDetailsAdapter(getActivity()));
+
         JobManager jobManager = DroidSignerApplication.getInstance().getJobManager();
-        jobManager.addJobInBackground(new DocumentDownloadJob(getArguments().getString("id")));
+        jobManager.addJobInBackground(DocumentDownloadJob.newInstance(getArguments().getString("id")));
 
         EventBus.getDefault().register(this);
 
-        return  view;
+        return view;
     }
 
     @Override
@@ -61,44 +67,19 @@ public class FragmentDocumentDownloaded extends Fragment {
         super.onCreate(savedInstanceState);
         documentDownloadedDatabaseAdapter = new DocumentDownloadedDatabaseAdapter(getActivity());
         documentAdapter = new DocumentAdapter(getActivity(), documentDownloadedDatabaseAdapter.findAllDownloadedDocument());
-
-
-    }
-
-    @Override
-    public void onViewCreated(View view, Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-
-    }
-
-    @Override
-    public void onAttach(Activity activity) {
-        super.onAttach(activity);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
     }
 
     public void onEventMainThread(DocumentDownloadJob.DocumentDownloadEvent event) {
-
         Document document = event.getDocument();
-        txtSubject.setText(document.getSubject());
-        txtDescription.setText(document.getDescription());
-        txtContentType.setText(document.getFileInfo().getContentType());
+        docSubject.setText(document.getSubject());
+        docDescription.setText(document.getDescription());
+        docAdapter.update(document);
 
-        document.setSubject(txtSubject.getText().toString());
-        document.setDescription(txtDescription.getText().toString());
         document.setStatus(1);
         document.setCreateDate(new Date().getTime());
 
         documentDownloadedDatabaseAdapter.save(document);
         documentAdapter.clear();
         documentAdapter.addDocuments(documentDownloadedDatabaseAdapter.findAllDownloadedDocument());
-
-
-
-
     }
 }

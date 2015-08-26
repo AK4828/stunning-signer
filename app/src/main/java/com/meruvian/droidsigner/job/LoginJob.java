@@ -6,6 +6,7 @@ import android.util.Log;
 import android.widget.ProgressBar;
 
 import com.meruvian.droidsigner.DroidSignerApplication;
+import com.meruvian.droidsigner.DroidSignerConstants;
 import com.meruvian.droidsigner.activity.LoginActivity;
 import com.meruvian.droidsigner.entity.Authentication;
 import com.meruvian.droidsigner.entity.user.User;
@@ -14,6 +15,9 @@ import com.meruvian.droidsigner.service.UserService;
 import com.meruvian.droidsigner.utils.AuthenticationUtils;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.Params;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,21 +29,34 @@ import retrofit.RestAdapter;
  * Created by root on 8/14/15.
  */
 public class LoginJob extends Job {
+    private final Logger log = LoggerFactory.getLogger(getClass());
     private String username;
     private String password;
+    private boolean refreshToken = false;
 
-    public LoginJob(String username, String password) {
+    public LoginJob() {
         super(new Params(1).requireNetwork().persist());
+    }
 
-        this.username = username;
-        this.password = password;
+    public static LoginJob login(String username, String password) {
+        LoginJob loginJob = new LoginJob();
+        loginJob.username = username;
+        loginJob.password = password;
+        loginJob.refreshToken = false;
+
+        return loginJob;
+    }
+
+    public static LoginJob refresh() {
+        LoginJob loginJob = new LoginJob();
+        loginJob.refreshToken = true;
+
+        return loginJob;
     }
 
     @Override
     public void onAdded() {
-
         EventBus.getDefault().post(new LoginEvent(LoginEvent.LOGIN_STARTED, null));
-
     }
 
     @Override
@@ -48,17 +65,28 @@ public class LoginJob extends Job {
         LoginService loginService = restAdapter.create(LoginService.class);
         UserService userService = restAdapter.create(UserService.class);
 
+        Authentication authentication = AuthenticationUtils.getCurrentAuthentication();
+
         Map<String, String> param = new HashMap<>();
-        param.put("grant_type", "password");
-        param.put("username", username);
-        param.put("password", password);
-        param.put("client_id", "419c6697-14b7-4853-880e-b68e3731e316");
-        param.put("client_secret", "s3cr3t");
+
+        if (refreshToken) {
+            param.put("grant_type", "refresh_token");
+            param.put("refresh_token", authentication.getRefreshToken());
+        } else {
+            param.put("grant_type", "password");
+            param.put("username", username);
+            param.put("password", password);
+        }
+
+        param.put("client_id", DroidSignerConstants.APP_ID);
+        param.put("client_secret", DroidSignerConstants.APP_SECRET);
+
+        Log.d("", "Sending login request");
+        Log.d("", param.toString());
 
         // Authorization header: Basic base64(clientId:clientSecret)
-        String authorization = new String(Base64.encode("419c6697-14b7-4853-880e-b68e3731e316:s3cr3t".getBytes(), Base64.DEFAULT));
-
-        Authentication authentication = loginService.login("Basic " + authorization, param);
+        String authorization = DroidSignerConstants.APP_AUTHORIZATION;
+        authentication = loginService.login("Basic " + authorization, param);
 
         // Login success
         if (authentication != null) {
@@ -79,10 +107,9 @@ public class LoginJob extends Job {
         EventBus.getDefault().post(new LoginEvent(LoginEvent.LOGIN_ERROR, null));
     }
 
-
     @Override
     protected boolean shouldReRunOnThrowable(Throwable throwable) {
-        Log.e("Auth", throwable.getMessage(), throwable);
+        log.error(throwable.getMessage(), throwable);
 
         return false;
     }

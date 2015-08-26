@@ -11,6 +11,9 @@ import com.meruvian.droidsigner.service.DocumentService;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.Params;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -22,22 +25,26 @@ import retrofit.RestAdapter;
  * Created by root on 8/14/15.
  */
 public class DocumentDownloadJob extends Job {
+    private final Logger log = LoggerFactory.getLogger(getClass());
+
     private String id;
     private Document document;
     private DocumentAdapter documentAdapter;
     private DocumentDownloadedDatabaseAdapter documentDownloadedDatabaseAdapter;
 
+    public static DocumentDownloadJob newInstance(String id) {
+        DocumentDownloadJob job = new DocumentDownloadJob();
+        job.id = id;
 
+        return job;
+    }
 
-
-    public DocumentDownloadJob(String id) {
+    public DocumentDownloadJob() {
         super(new Params(1).requireNetwork().persist());
-        this.id = id;
     }
 
     @Override
     public void onAdded() {
-
     }
 
     @Override
@@ -46,21 +53,17 @@ public class DocumentDownloadJob extends Job {
         DocumentService documentService = restAdapter.create(DocumentService.class);
         document = documentService.getDocumentById(id);
 
-        Log.d("document values", document.toString());
-
         EventBus.getDefault().post(new DocumentDownloadEvent(document));
-
-
-
     }
 
     @Override
     protected void onCancel() {
-
     }
 
     @Override
     protected boolean shouldReRunOnThrowable(Throwable throwable) {
+        log.error(throwable.getMessage(), throwable);
+
         return false;
     }
 

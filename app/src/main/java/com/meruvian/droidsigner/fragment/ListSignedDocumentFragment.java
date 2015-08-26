@@ -10,6 +10,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.joanzapata.iconify.IconDrawable;
+import com.joanzapata.iconify.fonts.FontAwesomeIcons;
 import com.meruvian.droidsigner.R;
 
 import butterknife.Bind;
@@ -25,6 +27,8 @@ import butterknife.OnClick;
  * create an instance of this fragment.
  */
 public class ListSignedDocumentFragment extends Fragment {
+    @Bind(R.id.fab) FloatingActionButton btnScan;
+
     public static ListSignedDocumentFragment newInstance() {
         ListSignedDocumentFragment fragment = new ListSignedDocumentFragment();
         Bundle args = new Bundle();
@@ -47,6 +51,8 @@ public class ListSignedDocumentFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_list_signed_document, container, false);
         ButterKnife.bind(this, view);
+
+        btnScan.setImageDrawable(new IconDrawable(getActivity(), FontAwesomeIcons.fa_qrcode).colorRes(android.R.color.white));
 
         return view;
     }
