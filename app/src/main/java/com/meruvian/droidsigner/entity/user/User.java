@@ -1,7 +1,5 @@
 package com.meruvian.droidsigner.entity.user;
 
-import com.meruvian.droidsigner.entity.DefaultPersistence;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -9,7 +7,7 @@ import java.util.List;
 /**
  * Created by dianw on 11/6/14.
  */
-public class User extends DefaultPersistence {
+public class User {
     private String id;
     private String username;
     private String password;

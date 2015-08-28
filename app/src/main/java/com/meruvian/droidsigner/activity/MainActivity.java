@@ -6,6 +6,7 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
@@ -22,10 +23,13 @@ import android.widget.Toast;
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
 import com.meruvian.droidsigner.R;
-import com.meruvian.droidsigner.content.adapter.DocumentAdapter;
-import com.meruvian.droidsigner.content.adapter.DocumentDownloadedDatabaseAdapter;
-import com.meruvian.droidsigner.fragment.ListSignedDocumentFragment;
+import com.meruvian.droidsigner.entity.KeyStore;
+import com.meruvian.droidsigner.fragment.DocumentListFragment;
 import com.meruvian.droidsigner.utils.AuthenticationUtils;
+
+import java.io.File;
+import java.util.Arrays;
+import java.util.List;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
@@ -37,9 +41,15 @@ public class MainActivity extends AppCompatActivity  {
     @Bind(R.id.toolbar) Toolbar mToolbar;
     @Bind(R.id.drawer_layout) DrawerLayout drawerLayout;
     @Bind(R.id.nav_view) NavigationView navigationView;
-    private DocumentAdapter documentAdapter;
-    private DocumentDownloadedDatabaseAdapter documentDownloadedDatabaseAdapter;
+
+    private final List<String> allowedExtensions = Arrays.asList(".pfx", ".p12", ".jks");
+    private final List<String> keyStoreTypes = Arrays.asList("PKCS12", "PKCS12", "JKS");
+
+//    private DocumentAdapter documentAdapter;
+//    private DocumentDownloadedDatabaseAdapter documentDownloadedDatabaseAdapter;
     private AlertDialog alertDialog;
+
+    protected static final int CHOOSE_FILE = 0;
 
     @Override
     public void onCreate(Bundle savedInstanceState){
@@ -47,12 +57,7 @@ public class MainActivity extends AppCompatActivity  {
         setContentView(R.layout.main_activity);
         ButterKnife.bind(this);
 
-        buildAlertDialog();
-
-        if (AuthenticationUtils.getKeyStore() == null) {
-            // TODO: Force user to insert keystore file before start using app
-            // alertDialog.show();
-        }
+        setupAlertDialog();
 
         setSupportActionBar(mToolbar);
         ActionBar actionBar = getSupportActionBar();
@@ -63,12 +68,12 @@ public class MainActivity extends AppCompatActivity  {
 
         if (savedInstanceState == null) {
             FragmentTransaction tr = getFragmentManager().beginTransaction();
-            tr.replace(R.id.container_body, ListSignedDocumentFragment.newInstance());
+            tr.replace(R.id.container_body, DocumentListFragment.newInstance());
             tr.commit();
         }
 
-        documentDownloadedDatabaseAdapter = new DocumentDownloadedDatabaseAdapter(this);
-        documentAdapter = new DocumentAdapter(this, documentDownloadedDatabaseAdapter.findAllDownloadedDocument());
+//        documentDownloadedDatabaseAdapter = new DocumentDownloadedDatabaseAdapter(this);
+//        documentAdapter = new DocumentAdapter(this, documentDownloadedDatabaseAdapter.findAllDownloadedDocument());
 //        documentList.setAdapter(documentAdapter);
 
 //        TelephonyManager telephonyManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
@@ -76,42 +81,25 @@ public class MainActivity extends AppCompatActivity  {
 //        Log.d("IMEI",tel);
     }
 
-    private void buildAlertDialog() {
-        alertDialog = new AlertDialog.Builder(this)
-            .setTitle("Choose certificate file first!")
-            .setPositiveButton("Choose", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
-                    intent.setType("*/*");
-                    intent.addCategory(Intent.CATEGORY_OPENABLE);
+    @Override
+    protected void onResume() {
+        super.onResume();
 
-                    try {
-                        startActivityForResult(Intent.createChooser(intent, "Select a File to Upload"), 5);
-                    } catch (android.content.ActivityNotFoundException ex) {
-                        // Potentially direct the user to the Market with a Dialog
-                        Toast.makeText(MainActivity.this, "Please install a File Manager.", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            })
-            .setNegativeButton("Back", new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    MainActivity.this.finish();
-                }
-            })
-            .setCancelable(false)
-            .create();
+        // Force user to insert keystore file before start using app
+        KeyStore keyStore = AuthenticationUtils.getKeyStore();
+        if (keyStore == null) {
+            alertDialog.show();
+        } else {
+            if (!new File(keyStore.getLocation()).exists()) {
+                alertDialog.show();
+            }
+        }
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == 5) {
-            if (data == null) {
-                alertDialog.show();
-            } else {
-                Toast.makeText(this, data.getData().getPath(), Toast.LENGTH_SHORT).show();
-            }
+        if (requestCode == CHOOSE_FILE) {
+            certificateChoosed(data == null ? null : data.getData());
         }
 
         super.onActivityResult(requestCode, resultCode, data);
@@ -127,8 +115,8 @@ public class MainActivity extends AppCompatActivity  {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                documentAdapter.clear();
-                documentAdapter.addDocuments(documentDownloadedDatabaseAdapter.findDocumentBySubject(query));
+//                documentAdapter.clear();
+//                documentAdapter.addDocuments(documentDownloadedDatabaseAdapter.findDocumentBySubject(query));
 
                 return false;
             }
@@ -149,15 +137,11 @@ public class MainActivity extends AppCompatActivity  {
             drawerLayout.openDrawer(GravityCompat.START);
         }
 
-        if (item.getTitle() == null) {
-            return true;
+        if (getResources().getString(R.string.logout).equals(item.getTitle())) {
+            logout();
         }
 
-        if (item.getTitle().equals(R.string.logout)) {
-            onClickLogout();
-        }
-
-        if (item.getTitle().equals(R.string.home)) {
+        if (getResources().getString(R.string.home).equals(item.getTitle())) {
             getFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
             drawerLayout.closeDrawer(GravityCompat.END);
         }
@@ -194,6 +178,80 @@ public class MainActivity extends AppCompatActivity  {
         drawerLayout.closeDrawers();
     }
 
+    private void setupAlertDialog() {
+        DialogInterface.OnClickListener onPositiveButton = new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
+                intent.setType("*/*");
+                intent.addCategory(Intent.CATEGORY_OPENABLE);
+
+                try {
+                    startActivityForResult(Intent.createChooser(intent, "Select a File to Upload"), CHOOSE_FILE);
+                } catch (android.content.ActivityNotFoundException ex) {
+                    // Potentially direct the user to the Market with a Dialog
+                    Toast.makeText(MainActivity.this, "Please install a File Manager.", Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+        alertDialog = new AlertDialog.Builder(this)
+                .setTitle(R.string.choose_cert_title)
+                .setMessage(R.string.choose_cert_msg)
+                .setPositiveButton(R.string.choose, onPositiveButton)
+                .setNegativeButton(R.string.exit, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        MainActivity.this.finish();
+                    }
+                })
+                .setCancelable(false)
+                .setIcon(new IconDrawable(this, FontAwesomeIcons.fa_file))
+                .create();
+    }
+
+    private void certificateChoosed(Uri data) {
+        if (data == null) {
+            alertDialog.show();
+        } else {
+            String path = data.getPath();
+            int ksType = -1;
+
+            if ((ksType = isExtensionValid(path)) < 0) {
+                Toast.makeText(this, R.string.invalid_cert, Toast.LENGTH_LONG).show();
+                alertDialog.show();
+
+                return;
+            }
+
+            String storeType = keyStoreTypes.get(ksType);
+            KeyStore keyStore = new KeyStore();
+            keyStore.setLocation(path);
+            keyStore.setType(storeType);
+
+            AuthenticationUtils.registerKeyStore(keyStore);
+        }
+    }
+
+    private int isExtensionValid(String fileName) {
+        int i = 0;
+        for (String extension : allowedExtensions) {
+            if (fileName.endsWith(extension)) {
+                return i;
+            }
+
+            i++;
+        }
+
+        return -1;
+    }
+
+    public void logout() {
+        AuthenticationUtils.logout();
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
+    }
+
     @Override
     public void onBackPressed() {
         if (getFragmentManager().getBackStackEntryCount() <= 0) {
@@ -202,11 +260,4 @@ public class MainActivity extends AppCompatActivity  {
             getFragmentManager().popBackStack();
         }
     }
-
-    public void onClickLogout(){
-        AuthenticationUtils.logout();
-        startActivity(new Intent(this, LoginActivity.class));
-        finish();
-    }
-
 }

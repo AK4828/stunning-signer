@@ -69,6 +69,7 @@ public class AuthenticationUtils {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(DroidSignerApplication.getInstance());
         SharedPreferences.Editor editor = preferences.edit();
         editor.remove(AUTHENTICATION);
+        editor.remove(KEY_STORE);
         editor.apply();
     }
 }

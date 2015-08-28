@@ -1,4 +1,4 @@
-package com.meruvian.droidsigner.content.adapter;
+package com.meruvian.droidsigner.adapter;
 
 import android.content.Context;
 import android.support.v7.widget.RecyclerView;
@@ -19,13 +19,13 @@ import butterknife.Bind;
 import butterknife.ButterKnife;
 
 /**
- * Created by dianw on 8/26/15.
+ * Created by dianw on 8/29/15.
  */
-public class DocumentDetailsAdapter extends RecyclerView.Adapter<DocumentDetailsAdapter.ViewHolder> {
+public class DocumentDetailAdapter extends RecyclerView.Adapter<DocumentDetailAdapter.ViewHolder> {
     private Context context;
     private List<Map.Entry<String, String>> kv = new ArrayList<>();
 
-    public DocumentDetailsAdapter(Context context) {
+    public DocumentDetailAdapter(Context context) {
         this.context = context;
     }
 
@@ -58,8 +58,10 @@ public class DocumentDetailsAdapter extends RecyclerView.Adapter<DocumentDetails
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {
-        @Bind(R.id.kv_key) TextView key;
-        @Bind(R.id.kv_value) TextView value;
+        @Bind(R.id.kv_key)
+        TextView key;
+        @Bind(R.id.kv_value)
+        TextView value;
 
         public ViewHolder(View view) {
             super(view);

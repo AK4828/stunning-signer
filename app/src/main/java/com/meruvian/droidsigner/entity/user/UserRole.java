@@ -1,12 +1,10 @@
 package com.meruvian.droidsigner.entity.user;
 
 
-import com.meruvian.droidsigner.entity.DefaultPersistence;
-
 /**
  * Created by root on 19/11/14.
  */
-public class UserRole extends DefaultPersistence {
+public class UserRole {
     private User user;
     private Role role;
 

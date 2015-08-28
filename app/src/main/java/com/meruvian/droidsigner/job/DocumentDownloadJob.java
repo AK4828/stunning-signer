@@ -1,13 +1,11 @@
 package com.meruvian.droidsigner.job;
 
-import android.util.Log;
-
 import com.meruvian.droidsigner.DroidSignerApplication;
-import com.meruvian.droidsigner.content.adapter.DocumentAdapter;
-import com.meruvian.droidsigner.content.adapter.DocumentDownloadedDatabaseAdapter;
-import com.meruvian.droidsigner.content.database.DocumentDownloadedDatabase;
 import com.meruvian.droidsigner.entity.Document;
+import com.meruvian.droidsigner.entity.DocumentDao;
+import com.meruvian.droidsigner.entity.user.User;
 import com.meruvian.droidsigner.service.DocumentService;
+import com.meruvian.droidsigner.utils.AuthenticationUtils;
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.Params;
 
@@ -15,8 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
 import de.greenrobot.event.EventBus;
 import retrofit.RestAdapter;
@@ -29,8 +25,6 @@ public class DocumentDownloadJob extends Job {
 
     private String id;
     private Document document;
-    private DocumentAdapter documentAdapter;
-    private DocumentDownloadedDatabaseAdapter documentDownloadedDatabaseAdapter;
 
     public static DocumentDownloadJob newInstance(String id) {
         DocumentDownloadJob job = new DocumentDownloadJob();
@@ -45,37 +39,53 @@ public class DocumentDownloadJob extends Job {
 
     @Override
     public void onAdded() {
+        EventBus.getDefault().post(new DocumentDownloadEvent(document, JobStatus.ADDED));
     }
 
     @Override
     public void onRun() throws Throwable {
-        RestAdapter restAdapter = DroidSignerApplication.getInstance().getRestAdapter();
-        DocumentService documentService = restAdapter.create(DocumentService.class);
+        DroidSignerApplication app = DroidSignerApplication.getInstance();
+        DocumentService documentService = app.getRestAdapter().create(DocumentService.class);
+        DocumentDao documentDao = app.getDaoSession().getDocumentDao();
         document = documentService.getDocumentById(id);
 
-        EventBus.getDefault().post(new DocumentDownloadEvent(document));
+        User user = AuthenticationUtils.getCurrentAuthentication().getUser();
+        document.setDbCreateBy(user.getId());
+        document.setDbCreateDate(new Date());
+
+        documentDao.insert(document);
+
+        EventBus.getDefault().post(new DocumentDownloadEvent(document, JobStatus.SUCCESS));
     }
 
     @Override
     protected void onCancel() {
+        EventBus.getDefault().post(new DocumentDownloadEvent(document, JobStatus.ABORTED));
     }
 
     @Override
     protected boolean shouldReRunOnThrowable(Throwable throwable) {
         log.error(throwable.getMessage(), throwable);
+        EventBus.getDefault().post(new DocumentDownloadEvent(document, JobStatus.SYSTEM_ERROR));
 
         return false;
     }
 
     public static class DocumentDownloadEvent {
         private Document document;
+        private int status;
 
-        public DocumentDownloadEvent(Document document) {
+        public DocumentDownloadEvent(Document document, int status) {
             this.document = document;
+            this.status = status;
         }
 
         public Document getDocument() {
             return document;
+        }
+
+        public int getStatus() {
+            return status;
         }
     }
 }

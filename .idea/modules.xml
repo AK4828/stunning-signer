@@ -4,6 +4,7 @@
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/dsigner.iml" filepath="$PROJECT_DIR$/dsigner.iml" />
+      <module fileurl="file://$PROJECT_DIR$/entity-generator/entity-generator.iml" filepath="$PROJECT_DIR$/entity-generator/entity-generator.iml" />
       <module fileurl="file://$PROJECT_DIR$/toolkit-core/toolkit-core.iml" filepath="$PROJECT_DIR$/toolkit-core/toolkit-core.iml" />
       <module fileurl="file://$PROJECT_DIR$/xmlsec/xmlsec.iml" filepath="$PROJECT_DIR$/xmlsec/xmlsec.iml" />
     </modules>

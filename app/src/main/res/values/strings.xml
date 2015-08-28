@@ -7,7 +7,14 @@
     <string name="help">Help</string>
     <string name="logout">Logout</string>
     <string name="search">Search</string>
+    <string name="exit">Exit</string>
+    <string name="choose">Choose</string>
+    <string name="sign">Sign</string>
+    <string name="password">Password</string>
     <string name="doc_details">Document Details</string>
+    <string name="choose_cert_title">Certificate</string>
+    <string name="choose_cert_msg">Please insert key store file (.pfx, .p12, .jks)</string>
+    <string name="invalid_cert">Invalid certificate file</string>
 
     <string-array name="nav_drawer_items">
         <item>@string/home</item>
@@ -25,7 +32,4 @@
     <string name="server_app_id">419c6697-14b7-4853-880e-b68e3731e316</string>
     <string name="server_app_secret">s3cr3t</string>
     <string name="server_auth_header">Basic NDE5YzY2OTctMTRiNy00ODUzLTg4MGUtYjY4ZTM3MzFlMzE2OnMzY3IzdA==</string>
-
-<!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>
