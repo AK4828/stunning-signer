@@ -7,7 +7,7 @@ import de.greenrobot.daogenerator.Schema;
 
 public class Generator {
     public static void main(String... args) throws Exception {
-        Schema schema = new Schema(1, "com.meruvian.droidsigner.entity");
+        Schema schema = new Schema(1, "id.rootca.sivion.dsigner.entity");
         schema.enableKeepSectionsByDefault();
         addDocument(schema, addFileInfo(schema));
 
