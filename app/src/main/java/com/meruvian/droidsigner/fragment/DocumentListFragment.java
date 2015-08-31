@@ -92,7 +92,7 @@ public class DocumentListFragment extends Fragment {
 
     @OnClick(R.id.fab)
     public void onFabClicked() {
-        FragmentUtils.replaceFragment(getFragmentManager(), ScannerFragment.newInstance(), null);
+        FragmentUtils.replaceFragment(getFragmentManager(), ScannerFragment.newInstance(), true);
     }
 
     private void loadDocuments() {
@@ -102,7 +102,11 @@ public class DocumentListFragment extends Fragment {
             @Override
             protected List<Document> doInBackground(Void... params) {
                 return docDao.queryBuilder()
-                        .limit(50).offset(docListAdapter.getItemCount()).list();
+                        .orderDesc(DocumentDao.Properties.DbCreateDate)
+                        .limit(50)
+                        .offset(docListAdapter.getItemCount())
+                        .build().forCurrentThread()
+                        .list();
             }
 
             @Override

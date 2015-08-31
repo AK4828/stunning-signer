@@ -21,12 +21,13 @@ public class ScannerFragment extends Fragment implements ZXingScannerView.Result
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mScannerView = new ZXingScannerView(getActivity());
         return mScannerView;
     }
+
     @Override
-    public void onResume(){
+    public void onResume() {
         super.onResume();
         mScannerView.setResultHandler(this);
         mScannerView.startCamera();
@@ -40,12 +41,12 @@ public class ScannerFragment extends Fragment implements ZXingScannerView.Result
         String id = rawResult.getText().toString();
 
         if (id != null) {
-            FragmentUtils.replaceFragment(getFragmentManager(), DocumentDownloadedFragment.newInstance(id), null);
+            FragmentUtils.replaceFragment(getFragmentManager(), DocumentDownloadedFragment.newInstance(id), false);
         }
     }
 
     @Override
-    public void onPause(){
+    public void onPause() {
         super.onPause();
         mScannerView.stopCamera();
     }

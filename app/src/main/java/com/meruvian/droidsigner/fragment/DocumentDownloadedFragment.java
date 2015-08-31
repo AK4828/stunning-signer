@@ -78,11 +78,23 @@ public class DocumentDownloadedFragment extends Fragment {
         JobManager jobManager = DroidSignerApplication.getInstance().getJobManager();
         jobManager.addJobInBackground(DocumentDownloadJob.newInstance(getArguments().getString("id")));
 
-        EventBus.getDefault().register(this);
-
         setupAlertDialog();
 
         return view;
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        EventBus.getDefault().unregister(this);
     }
 
     @OnClick(R.id.doc_sign)

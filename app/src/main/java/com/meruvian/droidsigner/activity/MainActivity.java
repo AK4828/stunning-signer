@@ -25,6 +25,7 @@ import com.joanzapata.iconify.fonts.FontAwesomeIcons;
 import com.meruvian.droidsigner.R;
 import com.meruvian.droidsigner.entity.KeyStore;
 import com.meruvian.droidsigner.fragment.DocumentListFragment;
+import com.meruvian.droidsigner.fragment.FragmentUtils;
 import com.meruvian.droidsigner.utils.AuthenticationUtils;
 
 import java.io.File;
@@ -45,8 +46,6 @@ public class MainActivity extends AppCompatActivity  {
     private final List<String> allowedExtensions = Arrays.asList(".pfx", ".p12", ".jks");
     private final List<String> keyStoreTypes = Arrays.asList("PKCS12", "PKCS12", "JKS");
 
-//    private DocumentAdapter documentAdapter;
-//    private DocumentDownloadedDatabaseAdapter documentDownloadedDatabaseAdapter;
     private AlertDialog alertDialog;
 
     protected static final int CHOOSE_FILE = 0;
@@ -67,14 +66,8 @@ public class MainActivity extends AppCompatActivity  {
         setupNavigationDrawer();
 
         if (savedInstanceState == null) {
-            FragmentTransaction tr = getFragmentManager().beginTransaction();
-            tr.replace(R.id.container_body, DocumentListFragment.newInstance());
-            tr.commit();
+            FragmentUtils.replaceFragment(getFragmentManager(), DocumentListFragment.newInstance(), false);
         }
-
-//        documentDownloadedDatabaseAdapter = new DocumentDownloadedDatabaseAdapter(this);
-//        documentAdapter = new DocumentAdapter(this, documentDownloadedDatabaseAdapter.findAllDownloadedDocument());
-//        documentList.setAdapter(documentAdapter);
 
 //        TelephonyManager telephonyManager = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
 //        String tel = telephonyManager.getDeviceId();
@@ -115,9 +108,6 @@ public class MainActivity extends AppCompatActivity  {
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-//                documentAdapter.clear();
-//                documentAdapter.addDocuments(documentDownloadedDatabaseAdapter.findDocumentBySubject(query));
-
                 return false;
             }
 
@@ -143,7 +133,8 @@ public class MainActivity extends AppCompatActivity  {
 
         if (getResources().getString(R.string.home).equals(item.getTitle())) {
             getFragmentManager().popBackStack(null, FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            drawerLayout.closeDrawer(GravityCompat.END);
+	        FragmentUtils.replaceFragment(getFragmentManager(), DocumentListFragment.newInstance(), false);
+            drawerLayout.closeDrawer(GravityCompat.START);
         }
 
         return true;
@@ -254,7 +245,7 @@ public class MainActivity extends AppCompatActivity  {
 
     @Override
     public void onBackPressed() {
-        if (getFragmentManager().getBackStackEntryCount() <= 0) {
+        if (getFragmentManager().getBackStackEntryCount() <= 1) {
             super.onBackPressed();
         } else {
             getFragmentManager().popBackStack();

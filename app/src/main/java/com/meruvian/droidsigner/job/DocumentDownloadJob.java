@@ -47,11 +47,21 @@ public class DocumentDownloadJob extends Job {
         DroidSignerApplication app = DroidSignerApplication.getInstance();
         DocumentService documentService = app.getRestAdapter().create(DocumentService.class);
         DocumentDao documentDao = app.getDaoSession().getDocumentDao();
+
+        // Scanned document already on database
+        document = documentDao.queryBuilder().where(DocumentDao.Properties.Id.eq(id)).build().unique();
+        if (document != null) {
+            EventBus.getDefault().post(new DocumentDownloadEvent(document, JobStatus.SUCCESS));
+
+            return;
+        }
+
         document = documentService.getDocumentById(id);
 
         User user = AuthenticationUtils.getCurrentAuthentication().getUser();
         document.setDbCreateBy(user.getId());
         document.setDbCreateDate(new Date());
+        document.setDbActiveFlag(1);
 
         documentDao.insert(document);
 
