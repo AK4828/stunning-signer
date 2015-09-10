@@ -13,7 +13,6 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/entity-generator" />
             <option value="$PROJECT_DIR$/toolkit-core" />
-            <option value="$PROJECT_DIR$/xmlsec" />
           </set>
         </option>
       </GradleProjectSettings>

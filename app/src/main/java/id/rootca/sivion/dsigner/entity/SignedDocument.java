@@ -8,9 +8,9 @@ import de.greenrobot.dao.DaoException;
 // KEEP INCLUDES - put your custom includes here
 // KEEP INCLUDES END
 /**
- * Entity mapped to table "DOCUMENT".
+ * Entity mapped to table "SIGNED_DOCUMENT".
  */
-public class Document implements java.io.Serializable, LogInformationAware {
+public class SignedDocument implements java.io.Serializable, LogInformationAware {
 
     private Long dbId;
     private java.util.Date dbCreateDate;
@@ -21,36 +21,37 @@ public class Document implements java.io.Serializable, LogInformationAware {
     private String id;
     private java.util.Date refCreateDate;
     private String refCreateBy;
-    private Long fileInfoId;
-    private String subject;
-    private String description;
-    private String content;
-    private String properties;
-    private String contentType;
-    private String status;
-    private String sha256Hash;
+    private Long documentId;
+    private Long parentDocument;
+    private byte[] signatureBlob;
+    private byte[] signedDocumentBlob;
+    private String signatureProperties;
+    private String signatureType;
 
     /** Used to resolve relations */
     private transient DaoSession daoSession;
 
     /** Used for active entity operations. */
-    private transient DocumentDao myDao;
+    private transient SignedDocumentDao myDao;
 
-    private FileInfo fileInfo;
-    private Long fileInfo__resolvedKey;
+    private Document document;
+    private Long document__resolvedKey;
+
+    private SignedDocument signedDocument;
+    private Long signedDocument__resolvedKey;
 
 
     // KEEP FIELDS - put your custom fields here
     // KEEP FIELDS END
 
-    public Document() {
+    public SignedDocument() {
     }
 
-    public Document(Long dbId) {
+    public SignedDocument(Long dbId) {
         this.dbId = dbId;
     }
 
-    public Document(Long dbId, java.util.Date dbCreateDate, java.util.Date dbUpdateDate, String dbCreateBy, String dbUpdateBy, Integer dbActiveFlag, String id, java.util.Date refCreateDate, String refCreateBy, Long fileInfoId, String subject, String description, String content, String properties, String contentType, String status, String sha256Hash) {
+    public SignedDocument(Long dbId, java.util.Date dbCreateDate, java.util.Date dbUpdateDate, String dbCreateBy, String dbUpdateBy, Integer dbActiveFlag, String id, java.util.Date refCreateDate, String refCreateBy, Long documentId, Long parentDocument, byte[] signatureBlob, byte[] signedDocumentBlob, String signatureProperties, String signatureType) {
         this.dbId = dbId;
         this.dbCreateDate = dbCreateDate;
         this.dbUpdateDate = dbUpdateDate;
@@ -60,20 +61,18 @@ public class Document implements java.io.Serializable, LogInformationAware {
         this.id = id;
         this.refCreateDate = refCreateDate;
         this.refCreateBy = refCreateBy;
-        this.fileInfoId = fileInfoId;
-        this.subject = subject;
-        this.description = description;
-        this.content = content;
-        this.properties = properties;
-        this.contentType = contentType;
-        this.status = status;
-        this.sha256Hash = sha256Hash;
+        this.documentId = documentId;
+        this.parentDocument = parentDocument;
+        this.signatureBlob = signatureBlob;
+        this.signedDocumentBlob = signedDocumentBlob;
+        this.signatureProperties = signatureProperties;
+        this.signatureType = signatureType;
     }
 
     /** called by internal mechanisms, do not call yourself. */
     public void __setDaoSession(DaoSession daoSession) {
         this.daoSession = daoSession;
-        myDao = daoSession != null ? daoSession.getDocumentDao() : null;
+        myDao = daoSession != null ? daoSession.getSignedDocumentDao() : null;
     }
 
     public Long getDbId() {
@@ -148,92 +147,101 @@ public class Document implements java.io.Serializable, LogInformationAware {
         this.refCreateBy = refCreateBy;
     }
 
-    public Long getFileInfoId() {
-        return fileInfoId;
+    public Long getDocumentId() {
+        return documentId;
     }
 
-    public void setFileInfoId(Long fileInfoId) {
-        this.fileInfoId = fileInfoId;
+    public void setDocumentId(Long documentId) {
+        this.documentId = documentId;
     }
 
-    public String getSubject() {
-        return subject;
+    public Long getParentDocument() {
+        return parentDocument;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public void setParentDocument(Long parentDocument) {
+        this.parentDocument = parentDocument;
     }
 
-    public String getDescription() {
-        return description;
+    public byte[] getSignatureBlob() {
+        return signatureBlob;
     }
 
-    public void setDescription(String description) {
-        this.description = description;
+    public void setSignatureBlob(byte[] signatureBlob) {
+        this.signatureBlob = signatureBlob;
     }
 
-    public String getContent() {
-        return content;
+    public byte[] getSignedDocumentBlob() {
+        return signedDocumentBlob;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setSignedDocumentBlob(byte[] signedDocumentBlob) {
+        this.signedDocumentBlob = signedDocumentBlob;
     }
 
-    public String getProperties() {
-        return properties;
+    public String getSignatureProperties() {
+        return signatureProperties;
     }
 
-    public void setProperties(String properties) {
-        this.properties = properties;
+    public void setSignatureProperties(String signatureProperties) {
+        this.signatureProperties = signatureProperties;
     }
 
-    public String getContentType() {
-        return contentType;
+    public String getSignatureType() {
+        return signatureType;
     }
 
-    public void setContentType(String contentType) {
-        this.contentType = contentType;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public String getSha256Hash() {
-        return sha256Hash;
-    }
-
-    public void setSha256Hash(String sha256Hash) {
-        this.sha256Hash = sha256Hash;
+    public void setSignatureType(String signatureType) {
+        this.signatureType = signatureType;
     }
 
     /** To-one relationship, resolved on first access. */
-    public FileInfo getFileInfo() {
-        Long __key = this.fileInfoId;
-        if (fileInfo__resolvedKey == null || !fileInfo__resolvedKey.equals(__key)) {
+    public Document getDocument() {
+        Long __key = this.documentId;
+        if (document__resolvedKey == null || !document__resolvedKey.equals(__key)) {
             if (daoSession == null) {
                 throw new DaoException("Entity is detached from DAO context");
             }
-            FileInfoDao targetDao = daoSession.getFileInfoDao();
-            FileInfo fileInfoNew = targetDao.load(__key);
+            DocumentDao targetDao = daoSession.getDocumentDao();
+            Document documentNew = targetDao.load(__key);
             synchronized (this) {
-                fileInfo = fileInfoNew;
-            	fileInfo__resolvedKey = __key;
+                document = documentNew;
+            	document__resolvedKey = __key;
             }
         }
-        return fileInfo;
+        return document;
     }
 
-    public void setFileInfo(FileInfo fileInfo) {
+    public void setDocument(Document document) {
         synchronized (this) {
-            this.fileInfo = fileInfo;
-            fileInfoId = fileInfo == null ? null : fileInfo.getDbId();
-            fileInfo__resolvedKey = fileInfoId;
+            this.document = document;
+            documentId = document == null ? null : document.getDbId();
+            document__resolvedKey = documentId;
+        }
+    }
+
+    /** To-one relationship, resolved on first access. */
+    public SignedDocument getSignedDocument() {
+        Long __key = this.parentDocument;
+        if (signedDocument__resolvedKey == null || !signedDocument__resolvedKey.equals(__key)) {
+            if (daoSession == null) {
+                throw new DaoException("Entity is detached from DAO context");
+            }
+            SignedDocumentDao targetDao = daoSession.getSignedDocumentDao();
+            SignedDocument signedDocumentNew = targetDao.load(__key);
+            synchronized (this) {
+                signedDocument = signedDocumentNew;
+            	signedDocument__resolvedKey = __key;
+            }
+        }
+        return signedDocument;
+    }
+
+    public void setSignedDocument(SignedDocument signedDocument) {
+        synchronized (this) {
+            this.signedDocument = signedDocument;
+            parentDocument = signedDocument == null ? null : signedDocument.getDbId();
+            signedDocument__resolvedKey = parentDocument;
         }
     }
 

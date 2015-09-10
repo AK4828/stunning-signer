@@ -15,6 +15,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.Toast;
@@ -207,9 +208,12 @@ public class MainActivity extends AppCompatActivity  {
             String path = data.getPath();
             int ksType = -1;
 
+            Log.i("Invalid wlawal", path);
+
             if ((ksType = isExtensionValid(path)) < 0) {
                 Toast.makeText(this, R.string.invalid_cert, Toast.LENGTH_LONG).show();
                 alertDialog.show();
+
 
                 return;
             }

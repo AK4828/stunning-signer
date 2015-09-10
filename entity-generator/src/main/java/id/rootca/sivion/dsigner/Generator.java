@@ -2,14 +2,15 @@ package id.rootca.sivion.dsigner;
 
 import de.greenrobot.daogenerator.DaoGenerator;
 import de.greenrobot.daogenerator.Entity;
-import de.greenrobot.daogenerator.Property;
 import de.greenrobot.daogenerator.Schema;
 
 public class Generator {
     public static void main(String... args) throws Exception {
         Schema schema = new Schema(1, "id.rootca.sivion.dsigner.entity");
         schema.enableKeepSectionsByDefault();
-        addDocument(schema, addFileInfo(schema));
+        Entity fileInfo = addFileInfo(schema);
+        Entity document = addDocument(schema, fileInfo);
+        Entity signedDocument = addSignedDocument(schema, document);
 
         DaoGenerator daoGenerator = new DaoGenerator();
         daoGenerator.generateAll(schema, "app/src/main/java");
@@ -54,4 +55,17 @@ public class Generator {
 
         return entity;
     }
+
+    private static Entity addSignedDocument(Schema schema, Entity document) {
+        Entity entity = addDefaultPersistence(schema.addEntity("SignedDocument"));
+        entity.addToOne(document, entity.addLongProperty("documentId").getProperty());
+        entity.addToOne(entity, entity.addLongProperty("parentDocument").getProperty());
+        entity.addByteArrayProperty("signatureBlob");
+        entity.addByteArrayProperty("signedDocumentBlob");
+        entity.addStringProperty("signatureProperties");
+        entity.addStringProperty("signatureType");
+
+        return entity;
+    }
+
 }

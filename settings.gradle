@@ -1,2 +1,2 @@
-include ':app', ':xmlsec', ':toolkit-core', ':entity-generator'
+include ':app',':toolkit-core', ':entity-generator'
 

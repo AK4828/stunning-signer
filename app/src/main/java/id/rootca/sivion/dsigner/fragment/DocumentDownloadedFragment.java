@@ -7,6 +7,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.InputType;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -19,6 +20,7 @@ import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
 import com.path.android.jobqueue.JobManager;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,11 +36,15 @@ import butterknife.ButterKnife;
 import butterknife.OnClick;
 import de.greenrobot.event.EventBus;
 import id.or.rootca.sivion.toolkit.commons.KeyStoreUtils;
+import id.or.rootca.sivion.toolkit.signer.JwtObjectSigner;
 import id.rootca.sivion.dsigner.DroidSignerApplication;
 import id.rootca.sivion.dsigner.R;
 import id.rootca.sivion.dsigner.adapter.DocumentDetailAdapter;
+import id.rootca.sivion.dsigner.entity.DaoSession;
 import id.rootca.sivion.dsigner.entity.Document;
 import id.rootca.sivion.dsigner.entity.KeyStore;
+import id.rootca.sivion.dsigner.entity.SignedDocument;
+import id.rootca.sivion.dsigner.entity.SignedDocumentDao;
 import id.rootca.sivion.dsigner.job.DocumentDownloadJob;
 import id.rootca.sivion.dsigner.job.JobStatus;
 import id.rootca.sivion.dsigner.utils.AuthenticationUtils;
@@ -124,15 +130,23 @@ public class DocumentDownloadedFragment extends Fragment {
 
             File outputFile = new File(getActivity().getFilesDir(), UUID.randomUUID().toString());
 
-//            XmlObjectSigner xmlObjectSigner = new XmlObjectSigner(ks, password.toCharArray());
-//            xmlObjectSigner.sign(data, outputFile);
+            JwtObjectSigner objectSigner = new JwtObjectSigner(ks,password.toCharArray());
+            objectSigner.sign(data, outputFile);
 
             StringWriter writer = new StringWriter();
             FileReader reader = new FileReader(outputFile);
 
             IOUtils.copy(reader, writer);
 
-            Toast.makeText(getActivity(), writer.toString(), Toast.LENGTH_LONG).show();
+            DaoSession daoSession = DroidSignerApplication.getInstance().getDaoSession();
+            SignedDocumentDao dao = daoSession.getSignedDocumentDao();
+
+            SignedDocument signedDocument = new SignedDocument();
+            signedDocument.setDocument(document);
+            signedDocument.setSignatureBlob(FileUtils.readFileToByteArray(outputFile));
+            dao.insert(signedDocument);
+
+            Toast.makeText(getActivity(), "Failed signing document: " + signedDocument.getDbId(), Toast.LENGTH_SHORT).show();
 
             IOUtils.closeQuietly(reader);
             IOUtils.closeQuietly(writer);
