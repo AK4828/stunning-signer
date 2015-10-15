@@ -1,8 +1,12 @@
 package id.rootca.sivion.dsigner.job;
 
+import android.os.Environment;
+
 import id.rootca.sivion.dsigner.DroidSignerApplication;
 import id.rootca.sivion.dsigner.entity.Document;
 import id.rootca.sivion.dsigner.entity.DocumentDao;
+import id.rootca.sivion.dsigner.entity.FileInfo;
+import id.rootca.sivion.dsigner.entity.FileInfoDao;
 import id.rootca.sivion.dsigner.entity.user.User;
 import id.rootca.sivion.dsigner.service.DocumentService;
 import id.rootca.sivion.dsigner.utils.AuthenticationUtils;
@@ -12,6 +16,7 @@ import com.path.android.jobqueue.Params;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.util.Date;
 
 import de.greenrobot.event.EventBus;
@@ -46,6 +51,8 @@ public class DocumentDownloadJob extends Job {
         DroidSignerApplication app = DroidSignerApplication.getInstance();
         DocumentService documentService = app.getRestAdapter().create(DocumentService.class);
         DocumentDao documentDao = app.getDaoSession().getDocumentDao();
+        FileInfoDao fileInfoDao = app.getDaoSession().getFileInfoDao();
+        File outputFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
         // Scanned document already on database
         document = documentDao.queryBuilder().where(DocumentDao.Properties.Id.eq(id)).build().unique();
@@ -56,11 +63,15 @@ public class DocumentDownloadJob extends Job {
         }
 
         document = documentService.getDocumentById(id);
+        FileInfo fileInfo = document.getDetachedFileInfo();
+        fileInfo.setPath("");
+        long fileInfoId = fileInfoDao.insert(fileInfo);
 
         User user = AuthenticationUtils.getCurrentAuthentication().getUser();
         document.setDbCreateBy(user.getId());
         document.setDbCreateDate(new Date());
         document.setDbActiveFlag(1);
+        document.setFileInfoId(fileInfoId);
 
         documentDao.insert(document);
 

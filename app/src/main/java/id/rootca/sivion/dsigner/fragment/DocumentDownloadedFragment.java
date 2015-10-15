@@ -3,6 +3,7 @@ package id.rootca.sivion.dsigner.fragment;
 import android.app.Fragment;
 import android.content.DialogInterface;
 import android.os.Bundle;
+import android.os.Environment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,6 +19,7 @@ import android.widget.Toast;
 
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
+import com.joanzapata.pdfview.PDFView;
 import com.path.android.jobqueue.JobManager;
 
 import org.apache.commons.io.FileUtils;
@@ -42,10 +44,13 @@ import id.rootca.sivion.dsigner.R;
 import id.rootca.sivion.dsigner.adapter.DocumentDetailAdapter;
 import id.rootca.sivion.dsigner.entity.DaoSession;
 import id.rootca.sivion.dsigner.entity.Document;
+import id.rootca.sivion.dsigner.entity.FileInfo;
+import id.rootca.sivion.dsigner.entity.FileInfoDao;
 import id.rootca.sivion.dsigner.entity.KeyStore;
 import id.rootca.sivion.dsigner.entity.SignedDocument;
 import id.rootca.sivion.dsigner.entity.SignedDocumentDao;
 import id.rootca.sivion.dsigner.job.DocumentDownloadJob;
+import id.rootca.sivion.dsigner.job.DocumentFileDownloadJob;
 import id.rootca.sivion.dsigner.job.JobStatus;
 import id.rootca.sivion.dsigner.utils.AuthenticationUtils;
 
@@ -56,13 +61,14 @@ public class DocumentDownloadedFragment extends Fragment {
     @Bind(R.id.doc_subject) TextView docSubject;
     @Bind(R.id.doc_description) TextView docDescription;
     @Bind(R.id.doc_props) RecyclerView docProps;
-    @Bind(R.id.doc_sign) Button docSign;
+    @Bind(R.id.doc_view) Button docView;
 
     private final Logger log = LoggerFactory.getLogger(getClass());
 
-    private Document document;
     private AlertDialog alertDialog;
+    private Document document;
     private DocumentDetailAdapter docAdapter;
+    private JobManager jobManager;
 
     public static DocumentDownloadedFragment newInstance(String id) {
         DocumentDownloadedFragment instance = new DocumentDownloadedFragment();
@@ -81,11 +87,8 @@ public class DocumentDownloadedFragment extends Fragment {
         docProps.setLayoutManager(new LinearLayoutManager(getActivity()));
         docProps.setAdapter(docAdapter = new DocumentDetailAdapter(getActivity()));
 
-        JobManager jobManager = DroidSignerApplication.getInstance().getJobManager();
+        jobManager = DroidSignerApplication.getInstance().getJobManager();
         jobManager.addJobInBackground(DocumentDownloadJob.newInstance(getArguments().getString("id")));
-
-        setupAlertDialog();
-
         return view;
     }
 
@@ -103,9 +106,9 @@ public class DocumentDownloadedFragment extends Fragment {
         EventBus.getDefault().unregister(this);
     }
 
-    @OnClick(R.id.doc_sign)
-    public void signBtnClicked() {
-        alertDialog.show();
+    @OnClick(R.id.doc_view)
+    public void viewBtnClicked() {
+        jobManager.addJobInBackground(DocumentFileDownloadJob.newInstance(getArguments().getString("id")));
     }
 
     public void onEventMainThread(DocumentDownloadJob.DocumentDownloadEvent event) {
@@ -115,20 +118,27 @@ public class DocumentDownloadedFragment extends Fragment {
             docDescription.setText(document.getDescription());
             docAdapter.update(document);
 
-            docSign.setEnabled(true);
+            docView.setEnabled(true);
+
+        }
+    }
+    public void onEventMainThread(DocumentFileDownloadJob.DocumentFileDownloadEvent event) {
+        if (event.getStatus() == JobStatus.SUCCESS) {
+            Long id = event.getFileInfo().getDbId();
+            FragmentUtils.replaceFragment(getFragmentManager(), DocumentViewFragment.newInstance(id), true);
         }
     }
 
     private void signData(Object data, String password) {
         KeyStore keyStore = AuthenticationUtils.getKeyStore();
-
         FileInputStream input = null;
         try {
             input = new FileInputStream(new File(keyStore.getLocation()));
             java.security.KeyStore ks = KeyStoreUtils.getKeyStore(input, password.toCharArray(), keyStore.getType());
             IOUtils.closeQuietly(input);
 
-            File outputFile = new File(getActivity().getFilesDir(), UUID.randomUUID().toString());
+            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+            File outputFile = new File(path, UUID.randomUUID().toString());
 
             JwtObjectSigner objectSigner = new JwtObjectSigner(ks,password.toCharArray());
             objectSigner.sign(data, outputFile);
@@ -140,13 +150,20 @@ public class DocumentDownloadedFragment extends Fragment {
 
             DaoSession daoSession = DroidSignerApplication.getInstance().getDaoSession();
             SignedDocumentDao dao = daoSession.getSignedDocumentDao();
+            FileInfoDao fileInfoDao = daoSession.getFileInfoDao();
+            FileInfo fileInfo = document.getFileInfo();
+            fileInfo.setPath(outputFile.getAbsolutePath());
+            fileInfoDao.update(fileInfo);
 
             SignedDocument signedDocument = new SignedDocument();
             signedDocument.setDocument(document);
             signedDocument.setSignatureBlob(FileUtils.readFileToByteArray(outputFile));
+            Log.i("fileInfo", outputFile.toString());
+
+
             dao.insert(signedDocument);
 
-            Toast.makeText(getActivity(), "Failed signing document: " + signedDocument.getDbId(), Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "Document Signed: " + signedDocument.getDbId(), Toast.LENGTH_SHORT).show();
 
             IOUtils.closeQuietly(reader);
             IOUtils.closeQuietly(writer);

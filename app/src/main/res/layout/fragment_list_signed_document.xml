@@ -18,7 +18,6 @@
         android:layout_gravity="bottom|end"
         android:layout_marginBottom="16dp"
         android:layout_marginRight="16dp"
-        android:src="@drawable/ic_action_view_qr_code"
         app:backgroundTint="?colorAccent"
         app:borderWidth="0dp"
         app:elevation="4sp" />

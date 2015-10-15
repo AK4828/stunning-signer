@@ -267,6 +267,10 @@ public class Document implements java.io.Serializable, LogInformationAware {
         setRefCreateDate(logInformation.getCreateDate());
         setRefCreateBy(logInformation.getCreateBy());
     }
+
+    public FileInfo getDetachedFileInfo() {
+        return fileInfo;
+    }
     // KEEP METHODS END
 
 }

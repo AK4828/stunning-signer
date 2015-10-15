@@ -5,11 +5,13 @@ import id.rootca.sivion.dsigner.entity.Document;
 import java.io.InputStream;
 import java.util.Map;
 
+import retrofit.client.Response;
 import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.PUT;
 import retrofit.http.Path;
 import retrofit.http.QueryMap;
+import retrofit.mime.TypedInput;
 
 /**
  * Created by root on 8/14/15.
@@ -22,5 +24,8 @@ public interface DocumentService {
     Document updateDocument(@Path("id") String docId,Document document);
 
     @GET("/api/documents/{id}")
-    Document getDocumentById(@Path("id")String id);
+    Document getDocumentById(@Path("id") String id);
+
+    @GET("/api/documents/{id}/file")
+    Response getDocumentFileById(@Path("id") String id);
 }
