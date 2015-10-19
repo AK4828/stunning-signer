@@ -1,58 +1,30 @@
 package id.rootca.sivion.dsigner.fragment;
 
 import android.app.Fragment;
-import android.content.DialogInterface;
 import android.os.Bundle;
-import android.os.Environment;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.text.InputType;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.EditText;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.joanzapata.iconify.IconDrawable;
-import com.joanzapata.iconify.fonts.FontAwesomeIcons;
-import com.joanzapata.pdfview.PDFView;
 import com.path.android.jobqueue.JobManager;
-
-import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileReader;
-import java.io.StringWriter;
-import java.util.UUID;
 
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import de.greenrobot.event.EventBus;
-import id.or.rootca.sivion.toolkit.commons.KeyStoreUtils;
-import id.or.rootca.sivion.toolkit.signer.JwtObjectSigner;
 import id.rootca.sivion.dsigner.DroidSignerApplication;
 import id.rootca.sivion.dsigner.R;
 import id.rootca.sivion.dsigner.adapter.DocumentDetailAdapter;
-import id.rootca.sivion.dsigner.entity.DaoSession;
 import id.rootca.sivion.dsigner.entity.Document;
-import id.rootca.sivion.dsigner.entity.FileInfo;
-import id.rootca.sivion.dsigner.entity.FileInfoDao;
-import id.rootca.sivion.dsigner.entity.KeyStore;
-import id.rootca.sivion.dsigner.entity.SignedDocument;
-import id.rootca.sivion.dsigner.entity.SignedDocumentDao;
 import id.rootca.sivion.dsigner.job.DocumentDownloadJob;
 import id.rootca.sivion.dsigner.job.DocumentFileDownloadJob;
 import id.rootca.sivion.dsigner.job.JobStatus;
-import id.rootca.sivion.dsigner.utils.AuthenticationUtils;
 
 /**
  * Created by root on 8/14/15.
@@ -62,13 +34,12 @@ public class DocumentDownloadedFragment extends Fragment {
     @Bind(R.id.doc_description) TextView docDescription;
     @Bind(R.id.doc_props) RecyclerView docProps;
     @Bind(R.id.doc_view) Button docView;
+    @Bind(R.id.downloading_progress) ProgressBar progressBar;
 
-    private final Logger log = LoggerFactory.getLogger(getClass());
-
-    private AlertDialog alertDialog;
     private Document document;
     private DocumentDetailAdapter docAdapter;
     private JobManager jobManager;
+    private View view;
 
     public static DocumentDownloadedFragment newInstance(String id) {
         DocumentDownloadedFragment instance = new DocumentDownloadedFragment();
@@ -80,7 +51,7 @@ public class DocumentDownloadedFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_document_download, container, false);
+        view = inflater.inflate(R.layout.fragment_document_download, container, false);
         ButterKnife.bind(this, view);
 
         docProps.setHasFixedSize(true);
@@ -119,77 +90,17 @@ public class DocumentDownloadedFragment extends Fragment {
             docAdapter.update(document);
 
             docView.setEnabled(true);
-
         }
     }
     public void onEventMainThread(DocumentFileDownloadJob.DocumentFileDownloadEvent event) {
         if (event.getStatus() == JobStatus.SUCCESS) {
             Long id = event.getFileInfo().getDbId();
             FragmentUtils.replaceFragment(getFragmentManager(), DocumentViewFragment.newInstance(id), true);
+        } else if (event.getStatus() == JobStatus.ADDED){
+            progressBar.setVisibility(view.VISIBLE);
+            docView.setVisibility(view.GONE);
+        } else if (event.getStatus() == JobStatus.SYSTEM_ERROR) {
+            Toast.makeText(getActivity(),"Failed receiving document",Toast.LENGTH_SHORT);
         }
-    }
-
-    private void signData(Object data, String password) {
-        KeyStore keyStore = AuthenticationUtils.getKeyStore();
-        FileInputStream input = null;
-        try {
-            input = new FileInputStream(new File(keyStore.getLocation()));
-            java.security.KeyStore ks = KeyStoreUtils.getKeyStore(input, password.toCharArray(), keyStore.getType());
-            IOUtils.closeQuietly(input);
-
-            File path = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-            File outputFile = new File(path, UUID.randomUUID().toString());
-
-            JwtObjectSigner objectSigner = new JwtObjectSigner(ks,password.toCharArray());
-            objectSigner.sign(data, outputFile);
-
-            StringWriter writer = new StringWriter();
-            FileReader reader = new FileReader(outputFile);
-
-            IOUtils.copy(reader, writer);
-
-            DaoSession daoSession = DroidSignerApplication.getInstance().getDaoSession();
-            SignedDocumentDao dao = daoSession.getSignedDocumentDao();
-            FileInfoDao fileInfoDao = daoSession.getFileInfoDao();
-            FileInfo fileInfo = document.getFileInfo();
-            fileInfo.setPath(outputFile.getAbsolutePath());
-            fileInfoDao.update(fileInfo);
-
-            SignedDocument signedDocument = new SignedDocument();
-            signedDocument.setDocument(document);
-            signedDocument.setSignatureBlob(FileUtils.readFileToByteArray(outputFile));
-            Log.i("fileInfo", outputFile.toString());
-
-
-            dao.insert(signedDocument);
-
-            Toast.makeText(getActivity(), "Document Signed: " + signedDocument.getDbId(), Toast.LENGTH_SHORT).show();
-
-            IOUtils.closeQuietly(reader);
-            IOUtils.closeQuietly(writer);
-        } catch (Exception e) {
-            Toast.makeText(getActivity(), "Failed signing document: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-            log.error(e.getMessage(), e);
-        }
-    }
-
-    private void setupAlertDialog() {
-        final EditText input = new EditText(getActivity());
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-
-        DialogInterface.OnClickListener onPositiveButton = new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                signData(document, input.getText().toString());
-            }
-        };
-
-        alertDialog = new AlertDialog.Builder(getActivity())
-                .setTitle(R.string.password)
-                .setPositiveButton(R.string.sign, onPositiveButton)
-                .setCancelable(false)
-                .setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_key))
-                .setView(input)
-                .create();
     }
 }

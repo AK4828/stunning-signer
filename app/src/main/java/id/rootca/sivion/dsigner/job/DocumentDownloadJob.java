@@ -52,7 +52,6 @@ public class DocumentDownloadJob extends Job {
         DocumentService documentService = app.getRestAdapter().create(DocumentService.class);
         DocumentDao documentDao = app.getDaoSession().getDocumentDao();
         FileInfoDao fileInfoDao = app.getDaoSession().getFileInfoDao();
-        File outputFile = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
 
         // Scanned document already on database
         document = documentDao.queryBuilder().where(DocumentDao.Properties.Id.eq(id)).build().unique();

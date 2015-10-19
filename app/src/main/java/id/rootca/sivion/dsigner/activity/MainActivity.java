@@ -208,8 +208,6 @@ public class MainActivity extends AppCompatActivity  {
             String path = data.getPath();
             int ksType = -1;
 
-            Log.i("Invalid wlawal", path);
-
             if ((ksType = isExtensionValid(path)) < 0) {
                 Toast.makeText(this, R.string.invalid_cert, Toast.LENGTH_LONG).show();
                 alertDialog.show();
