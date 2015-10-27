@@ -11,6 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.joanzapata.iconify.IconDrawable;
 import com.joanzapata.iconify.fonts.FontAwesomeIcons;
@@ -20,12 +21,15 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import de.greenrobot.event.EventBus;
 import id.rootca.sivion.dsigner.DroidSignerApplication;
 import id.rootca.sivion.dsigner.R;
 import id.rootca.sivion.dsigner.adapter.DocumentListAdapter;
 import id.rootca.sivion.dsigner.entity.DaoSession;
 import id.rootca.sivion.dsigner.entity.Document;
 import id.rootca.sivion.dsigner.entity.DocumentDao;
+import id.rootca.sivion.dsigner.job.DocumentSignJob;
+import id.rootca.sivion.dsigner.job.JobStatus;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -114,5 +118,25 @@ public class DocumentListFragment extends Fragment {
         // Reference http://stackoverflow.com/questions/8309354/formula-px-to-dp-dp-to-px-android
         float scale = context.getResources().getDisplayMetrics().density;
         return (int) ((dp * scale) + 0.5f);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        EventBus.getDefault().unregister(this);
+    }
+
+    public void onEventMainThread(DocumentSignJob.DocumentSignEvent event) {
+        if (event.getStatus() == JobStatus.SUCCESS) {
+            Toast.makeText(getActivity(), "Document Signed", Toast.LENGTH_SHORT).show();
+        }
     }
 }

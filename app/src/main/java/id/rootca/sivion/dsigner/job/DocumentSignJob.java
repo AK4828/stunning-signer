@@ -30,8 +30,11 @@ import de.greenrobot.event.EventBus;
 import id.or.rootca.sivion.toolkit.cms.CmsSigner;
 import id.or.rootca.sivion.toolkit.commons.KeyPairUtils;
 import id.or.rootca.sivion.toolkit.commons.KeyStoreUtils;
-import id.rootca.sivion.dsigner.entity.Document;
+import id.rootca.sivion.dsigner.DroidSignerApplication;
+import id.rootca.sivion.dsigner.entity.DaoSession;
 import id.rootca.sivion.dsigner.entity.KeyStore;
+import id.rootca.sivion.dsigner.entity.SignedDocument;
+import id.rootca.sivion.dsigner.entity.SignedDocumentDao;
 import id.rootca.sivion.dsigner.utils.AuthenticationUtils;
 
 /**
@@ -42,7 +45,6 @@ public class DocumentSignJob extends Job {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private String password;
     private String filePath;
-    private Context context;
 
     public static DocumentSignJob newInstance(String password,String filePath) {
         DocumentSignJob job = new DocumentSignJob();
@@ -54,6 +56,7 @@ public class DocumentSignJob extends Job {
 
     public DocumentSignJob(){
         super(new Params(1).requireNetwork().persist());
+
     }
 
     @Override
@@ -88,12 +91,22 @@ public class DocumentSignJob extends Job {
             CmsSigner signer = new CmsSigner(ks,certPassword);
             signer.sign(inputFile, outputFile);
 
+
             Collection<? extends Certificate> certs = signer.getCertificates(outputFile);
+
+            DaoSession daoSession = DroidSignerApplication.getInstance().getDaoSession();
+            SignedDocumentDao dao = daoSession.getSignedDocumentDao();
+
+            SignedDocument signedDocument = new SignedDocument();
+            signedDocument.setSignatureBlob(FileUtils.readFileToByteArray(outputFile));
+
+            dao.insert(signedDocument);
 
             IOUtils.closeQuietly(outputStream);
             IOUtils.closeQuietly(reader);
 
-        } catch (Exception e) {log.error(e.getMessage(), e);
+        } catch (Exception e) {
+            log.error(e.getMessage(), e);
         }
     }
 

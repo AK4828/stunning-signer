@@ -68,7 +68,7 @@ public class DocumentViewFragment extends Fragment {
             fabSign.setLayoutParams(p);
         }
 
-        fabSign.setImageDrawable(new IconDrawable(getActivity(), FontAwesomeIcons.fa_paint_brush).colorRes(android.R.color.white));
+        fabSign.setImageDrawable(new IconDrawable(getActivity(), FontAwesomeIcons.fa_key).colorRes(android.R.color.white));
 
         return view;
     }
@@ -94,23 +94,10 @@ public class DocumentViewFragment extends Fragment {
         setupAlertDialog();
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        EventBus.getDefault().register(this);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        EventBus.getDefault().unregister(this);
-    }
-
     @OnClick(R.id.fab_sign)
     public void onFabSignClicked() {
         alertDialog.show();
+        FragmentUtils.replaceFragment(getFragmentManager(), DocumentListFragment.newInstance(), true);
     }
 
     private void setupAlertDialog(){
@@ -143,12 +130,6 @@ public class DocumentViewFragment extends Fragment {
                 .create();
     }
 
-
-    public void onEventMainThread(DocumentSignJob.DocumentSignEvent event) {
-        if (event.getStatus() == JobStatus.SUCCESS) {
-            Toast.makeText(getActivity(), "Document Signed", Toast.LENGTH_SHORT).show();
-        }
-    }
 
     private static int dpToPx(Context context, float dp) {
         // Reference http://stackoverflow.com/questions/8309354/formula-px-to-dp-dp-to-px-android
