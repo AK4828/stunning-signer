@@ -70,7 +70,6 @@ public class DocumentSignJob extends Job {
         try {
             FileInputStream p12File = new FileInputStream(new File(keyStore.getLocation()));
             char[] certPassword = password.toCharArray();
-            Assert.assertNotNull(p12File);
             java.security.KeyStore ks = KeyStoreUtils.getKeyStore(p12File, certPassword, keyStore.getType());
 
             KeyPair keyPair = KeyPairUtils.getKeyPair(ks, certPassword);
@@ -79,10 +78,8 @@ public class DocumentSignJob extends Job {
             Assert.assertNotNull(cert);
 
             File inputFile = new File(filePath);
-            Log.d("inputLog", inputFile.getAbsolutePath());
             File outputPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             File outputFile = new File(outputPath, UUID.randomUUID().toString() + ".p7b");
-            Log.d("outputLog", outputFile.getAbsolutePath());
             FileOutputStream outputStream = new FileOutputStream(outputFile);
             FileReader reader = new FileReader(outputFile);
 
@@ -101,6 +98,8 @@ public class DocumentSignJob extends Job {
             signedDocument.setSignatureBlob(FileUtils.readFileToByteArray(outputFile));
 
             dao.insert(signedDocument);
+
+            EventBus.getDefault().post(new DocumentSignEvent(password, filePath, JobStatus.SUCCESS));
 
             IOUtils.closeQuietly(outputStream);
             IOUtils.closeQuietly(reader);

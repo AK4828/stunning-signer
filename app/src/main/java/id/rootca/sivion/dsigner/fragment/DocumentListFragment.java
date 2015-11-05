@@ -120,23 +120,4 @@ public class DocumentListFragment extends Fragment {
         return (int) ((dp * scale) + 0.5f);
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-
-        EventBus.getDefault().register(this);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
-
-        EventBus.getDefault().unregister(this);
-    }
-
-    public void onEventMainThread(DocumentSignJob.DocumentSignEvent event) {
-        if (event.getStatus() == JobStatus.SUCCESS) {
-            Toast.makeText(getActivity(), "Document Signed", Toast.LENGTH_SHORT).show();
-        }
-    }
 }

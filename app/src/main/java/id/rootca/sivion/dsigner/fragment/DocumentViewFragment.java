@@ -74,6 +74,20 @@ public class DocumentViewFragment extends Fragment {
     }
 
     @Override
+    public void onStart() {
+        super.onStart();
+
+        EventBus.getDefault().register(this);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+
+        EventBus.getDefault().unregister(this);
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
         Long id = getArguments().getLong("id");
@@ -97,7 +111,6 @@ public class DocumentViewFragment extends Fragment {
     @OnClick(R.id.fab_sign)
     public void onFabSignClicked() {
         alertDialog.show();
-        FragmentUtils.replaceFragment(getFragmentManager(), DocumentListFragment.newInstance(), true);
     }
 
     private void setupAlertDialog(){
@@ -128,6 +141,15 @@ public class DocumentViewFragment extends Fragment {
                 .setIcon(new IconDrawable(getActivity(), FontAwesomeIcons.fa_key))
                 .setView(input)
                 .create();
+    }
+
+    public void onEventMainThread(DocumentSignJob.DocumentSignEvent event) {
+        if (event.getStatus() == JobStatus.SUCCESS) {
+            Toast.makeText(getActivity(), "Document Signed", Toast.LENGTH_SHORT).show();
+            FragmentUtils.replaceFragment(getFragmentManager(), DocumentListFragment.newInstance(), true);
+        } else if (event.getStatus() == JobStatus.ABORTED){
+            Toast.makeText(getActivity(),"Signing document failed", Toast.LENGTH_SHORT).show();
+        }
     }
 
 

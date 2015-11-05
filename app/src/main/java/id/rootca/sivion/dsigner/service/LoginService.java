@@ -13,5 +13,5 @@ import retrofit.http.QueryMap;
  */
 public interface LoginService {
     @POST("/oauth/token")
-    Authentication login(@Header("Authorization") String authorization,@QueryMap Map<String, String> queryParam);
+    Authentication login(@Header("Authorization") String authorization, @QueryMap Map<String, String> queryParam);
 }
