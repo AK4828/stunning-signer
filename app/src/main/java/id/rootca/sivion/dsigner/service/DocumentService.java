@@ -5,7 +5,9 @@ import id.rootca.sivion.dsigner.entity.Document;
 import java.io.InputStream;
 import java.util.Map;
 
+import id.rootca.sivion.dsigner.entity.SignedDocument;
 import retrofit.client.Response;
+import retrofit.http.Body;
 import retrofit.http.GET;
 import retrofit.http.POST;
 import retrofit.http.PUT;
@@ -19,6 +21,10 @@ import retrofit.mime.TypedInput;
 public interface DocumentService {
     @POST("/api/documents")
     Document saveDocumentFile(@QueryMap Map<String, String> documents, InputStream stream) throws Exception;
+
+    @POST(("/api/documents/{id}/sign"))
+    SignedDocument uploadSignedDocument(@Body SignedDocument signedDocument, @Path("id") String id);
+
 
     @PUT("/api/documents/{id}")
     Document updateDocument(@Path("id") String docId,Document document);

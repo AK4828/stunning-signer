@@ -2,6 +2,7 @@ package id.rootca.sivion.dsigner;
 
 import android.app.Application;
 import android.database.sqlite.SQLiteDatabase;
+import android.util.Log;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -37,6 +38,7 @@ public class DroidSignerApplication extends Application {
         super.onCreate();
         objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
 
         Iconify.with(new FontAwesomeModule());
         configureJobManager();
@@ -50,6 +52,7 @@ public class DroidSignerApplication extends Application {
             public void intercept(RequestFacade request) {
                 Authentication auth = AuthenticationUtils.getCurrentAuthentication();
 
+
                 if (auth != null) {
                     request.addHeader("Authorization", "Bearer " + auth.getAccesToken());
                 }
@@ -57,7 +60,7 @@ public class DroidSignerApplication extends Application {
         };
 
         restAdapter = new RestAdapter.Builder()
-                .setEndpoint("http://crs.meruvian.org")
+                .setEndpoint("http://192.168.1.155:8080")
                 .setRequestInterceptor(requestInterceptor)
                 .setConverter(new JacksonConverter(objectMapper))
                 .build();

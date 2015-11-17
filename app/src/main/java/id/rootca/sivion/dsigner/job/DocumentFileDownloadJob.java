@@ -30,6 +30,7 @@ public class DocumentFileDownloadJob extends Job {
     private final Logger log = LoggerFactory.getLogger(getClass());
     private String id;
     private FileInfo fileInfo;
+    private Document document;
 
     public static DocumentFileDownloadJob newInstance(String id) {
         DocumentFileDownloadJob job = new DocumentFileDownloadJob();
@@ -43,7 +44,7 @@ public class DocumentFileDownloadJob extends Job {
     }
     @Override
     public void onAdded() {
-        EventBus.getDefault().post(new DocumentFileDownloadEvent(fileInfo, JobStatus.ADDED));
+        EventBus.getDefault().post(new DocumentFileDownloadEvent(fileInfo, document, JobStatus.ADDED));
     }
 
     @Override
@@ -67,28 +68,34 @@ public class DocumentFileDownloadJob extends Job {
         fileInfo.setPath(outputFile.getAbsolutePath());
         fileInfoDao.update(fileInfo);
 
-        EventBus.getDefault().post(new DocumentFileDownloadEvent(fileInfo, JobStatus.SUCCESS));
+        EventBus.getDefault().post(new DocumentFileDownloadEvent(fileInfo, doc, JobStatus.SUCCESS));
     }
 
     @Override
     protected void onCancel() {
-        EventBus.getDefault().post(new DocumentFileDownloadEvent(fileInfo, JobStatus.ABORTED));
+        EventBus.getDefault().post(new DocumentFileDownloadEvent(fileInfo, document, JobStatus.ABORTED));
     }
 
     @Override
     protected boolean shouldReRunOnThrowable(Throwable throwable) {
         log.error(throwable.getMessage(), throwable);
-        EventBus.getDefault().post(new DocumentFileDownloadEvent(fileInfo, JobStatus.SYSTEM_ERROR));
+        EventBus.getDefault().post(new DocumentFileDownloadEvent(fileInfo, document,JobStatus.SYSTEM_ERROR));
         return false;
     }
 
     public static class DocumentFileDownloadEvent {
         private FileInfo fileInfo;
+        private Document document;
         private int status;
 
-        public DocumentFileDownloadEvent(FileInfo fileInfo, int status) {
+        public DocumentFileDownloadEvent(FileInfo fileInfo, Document document, int status) {
             this.fileInfo = fileInfo;
+            this.document = document;
             this.status = status;
+        }
+
+        public Document getDocument() {
+            return document;
         }
 
         public FileInfo getFileInfo() {

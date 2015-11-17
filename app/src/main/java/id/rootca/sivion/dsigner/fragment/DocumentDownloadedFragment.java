@@ -95,7 +95,8 @@ public class DocumentDownloadedFragment extends Fragment {
     public void onEventMainThread(DocumentFileDownloadJob.DocumentFileDownloadEvent event) {
         if (event.getStatus() == JobStatus.SUCCESS) {
             Long id = event.getFileInfo().getDbId();
-            FragmentUtils.replaceFragment(getFragmentManager(), DocumentViewFragment.newInstance(id), true);
+            String refId = event.getDocument().getId();
+            FragmentUtils.replaceFragment(getFragmentManager(), DocumentViewFragment.newInstance(id, refId), true);
         } else if (event.getStatus() == JobStatus.ADDED){
             progressBar.setVisibility(view.VISIBLE);
             docView.setVisibility(view.GONE);

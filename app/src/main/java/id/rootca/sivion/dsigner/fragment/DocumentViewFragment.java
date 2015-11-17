@@ -43,10 +43,11 @@ public class DocumentViewFragment extends Fragment {
     private AlertDialog alertDialog;
     private JobManager jobManager;
 
-    public static DocumentViewFragment newInstance(Long id){
+    public static DocumentViewFragment newInstance(Long id, String refId){
         DocumentViewFragment instance = new DocumentViewFragment();
         instance.setArguments(new Bundle());
         instance.getArguments().putLong("id", id);
+        instance.getArguments().putString("refId", refId);
 
         return instance;
 
@@ -127,10 +128,10 @@ public class DocumentViewFragment extends Fragment {
 
                 FileInfo fileInfo = doc.getFileInfo();
                 String path = fileInfo.getPath();
-                DocumentSignJob.newInstance(input.getText().toString(), path);
+                DocumentSignJob.newInstance(id, input.getText().toString(), path);
 
                 jobManager = DroidSignerApplication.getInstance().getJobManager();
-                jobManager.addJobInBackground(DocumentSignJob.newInstance(input.getText().toString(), path));
+                jobManager.addJobInBackground(DocumentSignJob.newInstance(id, input.getText().toString(), path));
             }
         };
 
@@ -147,6 +148,7 @@ public class DocumentViewFragment extends Fragment {
         if (event.getStatus() == JobStatus.SUCCESS) {
             Toast.makeText(getActivity(), "Document Signed", Toast.LENGTH_SHORT).show();
             FragmentUtils.replaceFragment(getFragmentManager(), DocumentListFragment.newInstance(), true);
+
         } else if (event.getStatus() == JobStatus.ABORTED){
             Toast.makeText(getActivity(),"Signing document failed", Toast.LENGTH_SHORT).show();
         }

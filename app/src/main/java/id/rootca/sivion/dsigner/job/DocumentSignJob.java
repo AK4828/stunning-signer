@@ -32,9 +32,12 @@ import id.or.rootca.sivion.toolkit.commons.KeyPairUtils;
 import id.or.rootca.sivion.toolkit.commons.KeyStoreUtils;
 import id.rootca.sivion.dsigner.DroidSignerApplication;
 import id.rootca.sivion.dsigner.entity.DaoSession;
+import id.rootca.sivion.dsigner.entity.Document;
+import id.rootca.sivion.dsigner.entity.DocumentDao;
 import id.rootca.sivion.dsigner.entity.KeyStore;
 import id.rootca.sivion.dsigner.entity.SignedDocument;
 import id.rootca.sivion.dsigner.entity.SignedDocumentDao;
+import id.rootca.sivion.dsigner.service.DocumentService;
 import id.rootca.sivion.dsigner.utils.AuthenticationUtils;
 
 /**
@@ -43,14 +46,17 @@ import id.rootca.sivion.dsigner.utils.AuthenticationUtils;
 public class DocumentSignJob extends Job {
 
     private final Logger log = LoggerFactory.getLogger(getClass());
+    private Long docId;
     private String password;
     private String filePath;
 
-    public static DocumentSignJob newInstance(String password,String filePath) {
+    public static DocumentSignJob newInstance(Long docId, String password, String filePath) {
         DocumentSignJob job = new DocumentSignJob();
 
+        job.docId = docId;
         job.password = password;
         job.filePath = filePath;
+
         return job;
     }
 
@@ -80,29 +86,31 @@ public class DocumentSignJob extends Job {
             File inputFile = new File(filePath);
             File outputPath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
             File outputFile = new File(outputPath, UUID.randomUUID().toString() + ".p7b");
-            FileOutputStream outputStream = new FileOutputStream(outputFile);
-            FileReader reader = new FileReader(outputFile);
-
-            IOUtils.copy(reader, outputStream);
 
             CmsSigner signer = new CmsSigner(ks,certPassword);
             signer.sign(inputFile, outputFile);
 
-
-            Collection<? extends Certificate> certs = signer.getCertificates(outputFile);
+            DroidSignerApplication app  = DroidSignerApplication.getInstance();
+            DocumentService documentService = app.getRestAdapter().create(DocumentService.class);
 
             DaoSession daoSession = DroidSignerApplication.getInstance().getDaoSession();
+            DocumentDao documentDao = daoSession.getDocumentDao();
             SignedDocumentDao dao = daoSession.getSignedDocumentDao();
 
+            Document document = documentDao.load(docId);
+
             SignedDocument signedDocument = new SignedDocument();
+            signedDocument.setDocument(document);
+            signedDocument.setSignatureType("PKCS7");
             signedDocument.setSignatureBlob(FileUtils.readFileToByteArray(outputFile));
 
             dao.insert(signedDocument);
 
-            EventBus.getDefault().post(new DocumentSignEvent(password, filePath, JobStatus.SUCCESS));
+            SignedDocument refSignedDocument = documentService.uploadSignedDocument(signedDocument, document.getId());
+            signedDocument.setId(refSignedDocument.getId());
+            signedDocument.update();
 
-            IOUtils.closeQuietly(outputStream);
-            IOUtils.closeQuietly(reader);
+            EventBus.getDefault().post(new DocumentSignEvent(password, filePath, JobStatus.SUCCESS));
 
         } catch (Exception e) {
             log.error(e.getMessage(), e);

@@ -270,6 +270,10 @@ public class SignedDocument implements java.io.Serializable, LogInformationAware
     }
 
     // KEEP METHODS - put your custom methods here
+    public byte[] getSignature() {
+        return getSignatureBlob();
+    }
+
     @Override
     public void setLogInformation(LogInformation logInformation) {
         setRefCreateDate(logInformation.getCreateDate());
