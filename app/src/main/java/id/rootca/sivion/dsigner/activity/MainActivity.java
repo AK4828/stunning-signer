@@ -5,8 +5,11 @@ import android.app.SearchManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
+import android.provider.MediaStore;
+import android.security.KeyChain;
 import android.support.design.widget.NavigationView;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -92,27 +95,35 @@ public class MainActivity extends AppCompatActivity  {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == CHOOSE_FILE) {
-            certificateChoosed(data == null ? null : data.getData());
-        }
+            Uri uri = data.getData();
 
-        super.onActivityResult(requestCode, resultCode, data);
+//            String pathFromUri = uri.getPath();
+//
+//            Log.d("CEK", String.valueOf(pathFromUri));
+
+            getRealPathFromUri(this, uri);
+
+            certificateChoosed(data == null ? null : data.getData());
+
+            super.onActivityResult(requestCode, resultCode, data);
+        }
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu){
+    public boolean onCreateOptionsMenu (Menu menu){
         getMenuInflater().inflate(R.menu.actions, menu);
 
         SearchManager searchManager = (SearchManager) getSystemService(Context.SEARCH_SERVICE);
         SearchView searchView = (SearchView) menu.findItem(R.id.action_search).getActionView();
-        searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
-        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-            @Override
-            public boolean onQueryTextSubmit(String query) {
-                return false;
-            }
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(getComponentName()));
+            searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+                @Override
+                public boolean onQueryTextSubmit(String query) {
+                    return false;
+                }
 
-            @Override
-            public boolean onQueryTextChange(String newText) {
+                @Override
+                public boolean onQueryTextChange(String newText) {
                 return false;
             }
         });
@@ -252,4 +263,34 @@ public class MainActivity extends AppCompatActivity  {
             getFragmentManager().popBackStack();
         }
     }
+
+    public String getRealPathFromUri(Context context, Uri contentUri) {
+
+        Cursor c = getContentResolver().query(contentUri, null, null, null, null);
+        c.moveToNext();
+        String originalPath = c.getString(c.getColumnIndex(MediaStore.MediaColumns.DATA));
+        c.close();
+        return originalPath;
+
+
+
+
+//        try {
+//            String[] resolveUri = {MediaStore.MediaColumns.DATA};
+//            cursor = context.getContentResolver().query(contentUri, resolveUri, null, null, null);
+//            Log.d("AAA", String.valueOf(cursor));
+//            int column_index = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA);
+//            cursor.moveToFirst();
+//
+////            String originalPath = cursor.getString(column_index);
+////
+////            Log.d("PATH", originalPath);
+//            return cursor.getString(column_index);
+//
+//        } finally {
+//            if (cursor != null) {
+//                cursor.close();
+//            }
+//        }
+     }
 }

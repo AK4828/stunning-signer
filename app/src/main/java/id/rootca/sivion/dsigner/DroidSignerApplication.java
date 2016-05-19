@@ -60,7 +60,7 @@ public class DroidSignerApplication extends Application {
         };
 
         restAdapter = new RestAdapter.Builder()
-                .setEndpoint("http://crs.rootca.or.id")
+                .setEndpoint("http://crs.meruvian.org")
                 .setRequestInterceptor(requestInterceptor)
                 .setConverter(new JacksonConverter(objectMapper))
                 .build();

@@ -146,11 +146,11 @@ public class DocumentViewFragment extends Fragment {
 
     public void onEventMainThread(DocumentSignJob.DocumentSignEvent event) {
         if (event.getStatus() == JobStatus.SUCCESS) {
-            Toast.makeText(getActivity(), "Document Signed", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getActivity(), "Document Signed.", Toast.LENGTH_SHORT).show();
             FragmentUtils.replaceFragment(getFragmentManager(), DocumentListFragment.newInstance(), true);
 
-        } else if (event.getStatus() == JobStatus.ABORTED){
-            Toast.makeText(getActivity(),"Signing document failed", Toast.LENGTH_SHORT).show();
+        } else if (event.getStatus() == JobStatus.USER_ERROR){
+            Toast.makeText(getActivity(),"Signing failed, wrong password or corrupted file.", Toast.LENGTH_SHORT).show();
         }
     }
 

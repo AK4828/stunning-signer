@@ -91,6 +91,8 @@ public class LoginJob extends Job {
             authentication.setUser(user);
             AuthenticationUtils.registerAuthentication(authentication);
 
+            Log.d("expire", String.valueOf(authentication.getExpiresIn()));
+
             EventBus.getDefault().post(new LoginEvent(LoginEvent.LOGIN_SUCCESS, authentication));
         } else {
             EventBus.getDefault().post(new LoginEvent(LoginEvent.LOGIN_FAILED, null));

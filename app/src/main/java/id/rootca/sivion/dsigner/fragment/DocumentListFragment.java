@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -25,11 +26,13 @@ import de.greenrobot.event.EventBus;
 import id.rootca.sivion.dsigner.DroidSignerApplication;
 import id.rootca.sivion.dsigner.R;
 import id.rootca.sivion.dsigner.adapter.DocumentListAdapter;
+import id.rootca.sivion.dsigner.entity.Authentication;
 import id.rootca.sivion.dsigner.entity.DaoSession;
 import id.rootca.sivion.dsigner.entity.Document;
 import id.rootca.sivion.dsigner.entity.DocumentDao;
 import id.rootca.sivion.dsigner.job.DocumentSignJob;
 import id.rootca.sivion.dsigner.job.JobStatus;
+import id.rootca.sivion.dsigner.utils.AuthenticationUtils;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -90,6 +93,8 @@ public class DocumentListFragment extends Fragment {
 
     @OnClick(R.id.fab)
     public void onFabClicked() {
+        Authentication authentication = AuthenticationUtils.getCurrentAuthentication();
+        Log.d("cek expire", String.valueOf(authentication.getExpiresIn()));
         FragmentUtils.replaceFragment(getFragmentManager(), ScannerFragment.newInstance(), true);
     }
 
@@ -102,7 +107,6 @@ public class DocumentListFragment extends Fragment {
                 return docDao.queryBuilder()
                         .orderDesc(DocumentDao.Properties.DbCreateDate)
                         .limit(50)
-                        .offset(docListAdapter.getItemCount())
                         .build().forCurrentThread()
                         .list();
             }

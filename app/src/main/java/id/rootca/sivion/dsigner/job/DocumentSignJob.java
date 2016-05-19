@@ -1,9 +1,6 @@
 package id.rootca.sivion.dsigner.job;
 
-import android.content.Context;
 import android.os.Environment;
-import android.util.Log;
-import android.widget.Toast;
 
 import com.path.android.jobqueue.Job;
 import com.path.android.jobqueue.Params;
@@ -11,19 +8,13 @@ import com.path.android.jobqueue.Params;
 import junit.framework.Assert;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.io.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.StringWriter;
 import java.security.KeyPair;
-import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
-import java.util.Collection;
 import java.util.UUID;
 
 import de.greenrobot.event.EventBus;
@@ -113,6 +104,7 @@ public class DocumentSignJob extends Job {
             EventBus.getDefault().post(new DocumentSignEvent(password, filePath, JobStatus.SUCCESS));
 
         } catch (Exception e) {
+            EventBus.getDefault().post(new DocumentSignEvent(password, filePath, JobStatus.USER_ERROR));
             log.error(e.getMessage(), e);
         }
     }
